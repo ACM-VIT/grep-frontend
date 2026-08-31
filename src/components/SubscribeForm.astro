@@ -1,0 +1,254 @@
+---
+/**
+ * Subscribe form.
+ *
+ * The interaction matches the one on acmvit.in/grep: the browser's own
+ * validation is turned off (`novalidate`) in favour of inline messages, a bad
+ * address shakes the field red, and a good one fires the confetti burst before
+ * the status line goes green.
+ *
+ * The submission is posted to `/api/subscribe`; without JS the same form falls
+ * back to a plain POST, which redirects back here with a `?state=` flag.
+ */
+interface Props {
+  variant?: 'inline' | 'panel';
+  id?: string;
+}
+
+const { variant = 'inline', id = 'subscribe' } = Astro.props;
+---
+
+<form
+  class:list={['subscribe', `subscribe--${variant}`]}
+  action="/api/subscribe"
+  method="post"
+  novalidate
+  data-subscribe
+  id={id}
+>
+  <div class="subscribe-row">
+    <label class="visually-hidden" for={`${id}-email`}>Email address</label>
+    <input
+      id={`${id}-email`}
+      class="subscribe-input"
+      type="email"
+      name="email"
+      inputmode="email"
+      autocomplete="email"
+      aria-describedby={`${id}-status`}
+      placeholder="Enter your email to subscribe"
+      data-subscribe-input
+    />
+
+    <button class="btn subscribe-submit" type="submit" data-subscribe-submit>
+      <span data-subscribe-label>Subscribe</span>
+    </button>
+  </div>
+
+  {/* A field no human sees; bots that fill it get a silent success. */}
+  <div class="subscribe-trap" aria-hidden="true">
+    <label for={`${id}-website`}>Leave this empty</label>
+    <input id={`${id}-website`} type="text" name="website" tabindex="-1" autocomplete="off" />
+  </div>
+
+  <p class="subscribe-note">One email an edition. No spam, no tracking pixels, unsubscribe in a click.</p>
+  <p class="subscribe-status" id={`${id}-status`} role="status" aria-live="polite" data-subscribe-status hidden></p>
+</form>
+
+<style>
+  .subscribe {
+    display: grid;
+    gap: 0.6rem;
+    width: 100%;
+  }
+
+  .subscribe-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  .subscribe-input {
+    flex: 1 1 15rem;
+    min-width: 0;
+    padding: 0.78em 1.1em;
+    border-radius: var(--radius-btn);
+    border: 2px solid color-mix(in srgb, var(--blue) 30%, transparent);
+    background: var(--paper-card);
+    font-size: var(--step-0);
+    letter-spacing: -0.01em;
+    transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+  }
+
+  .subscribe-input::placeholder {
+    color: color-mix(in srgb, var(--ink) 38%, transparent);
+  }
+
+  .subscribe-input:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 14%, transparent);
+  }
+
+  /* A rejected address shakes once and holds the red border until edited. */
+  .subscribe-input.is-invalid {
+    border-color: #ef4444;
+    animation: input-shake 0.4s ease;
+  }
+
+  @keyframes input-shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20% {
+      transform: translateX(-6px);
+    }
+    40% {
+      transform: translateX(6px);
+    }
+    60% {
+      transform: translateX(-4px);
+    }
+    80% {
+      transform: translateX(4px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .subscribe-input.is-invalid {
+      animation: none;
+    }
+  }
+
+  .subscribe-submit {
+    --accent: var(--blue);
+    --accent-contrast: #fff;
+    flex: 0 0 auto;
+    border-radius: var(--radius-btn);
+  }
+
+  .subscribe-submit[disabled] {
+    opacity: 0.65;
+    cursor: progress;
+  }
+
+  .subscribe-trap {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .subscribe-note {
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .subscribe-status {
+    font-size: var(--step--1);
+    font-weight: 600;
+  }
+
+  /* --- panel --- */
+  .subscribe--panel {
+    padding: clamp(1.4rem, 4vw, 2.2rem);
+    background: var(--paper-card);
+    border: 2.5px solid var(--blue);
+    border-radius: var(--radius-lg);
+  }
+</style>
+
+<script>
+  import { burst } from '../scripts/confetti';
+
+  const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const OK = '#16a34a';
+  const BAD = '#ef4444';
+
+  document.querySelectorAll<HTMLFormElement>('[data-subscribe]').forEach((form) => {
+    const input = form.querySelector<HTMLInputElement>('[data-subscribe-input]');
+    const status = form.querySelector<HTMLElement>('[data-subscribe-status]');
+    const button = form.querySelector<HTMLButtonElement>('[data-subscribe-submit]');
+    const label = form.querySelector<HTMLElement>('[data-subscribe-label]');
+    if (!input) return;
+
+    let clearTimer = 0;
+
+    const say = (message: string, color: string) => {
+      if (!status) return;
+      status.textContent = message;
+      status.style.color = color;
+      status.hidden = false;
+    };
+
+    const clear = () => {
+      if (!status) return;
+      status.textContent = '';
+      status.style.removeProperty('color');
+      status.hidden = true;
+    };
+
+    const reject = (message: string) => {
+      say(message, BAD);
+      input.setAttribute('aria-invalid', 'true');
+      // Re-trigger the shake even if the class is already present.
+      input.classList.remove('is-invalid');
+      void input.offsetWidth;
+      input.classList.add('is-invalid');
+      input.focus();
+    };
+
+    const accept = () => {
+      input.removeAttribute('aria-invalid');
+      input.classList.remove('is-invalid');
+    };
+
+    // Typing dismisses the previous rejection.
+    input.addEventListener('input', () => {
+      if (input.getAttribute('aria-invalid') === 'true') {
+        accept();
+        clear();
+      }
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = input.value.trim();
+
+      if (!email) return reject('Enter your email to subscribe.');
+      if (!EMAIL.test(email)) return reject("That doesn't look like a valid email.");
+
+      accept();
+      window.clearTimeout(clearTimer);
+
+      if (button) button.disabled = true;
+      if (label) label.textContent = 'Subscribing…';
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: new FormData(form),
+        });
+        const data = (await response.json().catch(() => ({}))) as { message?: string };
+
+        if (response.ok) {
+          burst();
+          form.reset();
+          say(data.message ?? "You're in - welcome to grep.", OK);
+          clearTimer = window.setTimeout(clear, 4000);
+        } else {
+          reject(data.message ?? "That didn't go through. Try again in a moment.");
+        }
+      } catch {
+        reject('Network hiccup - check your connection and try again.');
+      } finally {
+        if (button) button.disabled = false;
+        if (label) label.textContent = 'Subscribe';
+      }
+    });
+  });
+</script>

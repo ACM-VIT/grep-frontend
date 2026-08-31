@@ -1,0 +1,309 @@
+---
+import AcmMark from './AcmMark.astro';
+import Wordmark from './Wordmark.astro';
+import { site, socials } from '../lib/site';
+import { linkTarget } from '../lib/links';
+
+/**
+ * The back page: ACM lockup, the printed 3×3 link grid, and the blue end-card
+ * with its pixel heart - reproduced in markup rather than as a flat image.
+ */
+interface Props {
+  /** Set when the page already ends in a full-bleed band, which supplies its own space. */
+  flush?: boolean;
+}
+
+const { flush = false } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<footer class:list={['site-footer', flush && 'site-footer--flush']}>
+  <div class="back">
+    <div class="shell back-inner">
+      <div class="back-id">
+        <a class="back-mark" href="https://acmvit.in/" aria-label="ACM-VIT" {...linkTarget('https://acmvit.in/')}>
+          <AcmMark variant="outline" size={92} />
+        </a>
+        <p class="back-org">
+          <span class="back-org-name">Association for Computing Machinery</span>
+          <span class="back-org-chapter">VIT Student Chapter</span>
+        </p>
+      </div>
+
+      <nav class="back-links" aria-label="ACM-VIT elsewhere">
+        {
+          socials.map((item) => (
+            <a class="back-link" href={item.href} {...linkTarget(item.href)}>
+              <img
+                class="back-link-icon"
+                src={`/logos/socials/${item.icon}.svg`}
+                alt=""
+                aria-hidden="true"
+                width="40"
+                height="40"
+                loading="lazy"
+                decoding="async"
+              />
+              <span class="script back-link-label">{item.label}</span>
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+  </div>
+
+  <div class="endcard wave-edge wave-edge--top">
+    {/* The printed cover's keyboard, behind the closing wordmark. Injected
+        inline (rather than as an <img>) so each key can light up on hover. */}
+    <div class="endcard-keys" id="footer-keys" aria-hidden="true"></div>
+
+    <div class="endcard-inner shell">
+      <Wordmark stacked size="clamp(2.5rem, 8vw, 4.5rem)" class="endcard-mark" />
+      <p class="endcard-line">End of page. Not end of chapter.</p>
+
+      <div class="endcard-meta">
+        <p class="endcard-craft">
+          <img class="heart" src="/logos/heart.png" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+          <span class="script">crafted with love by ACM-VIT</span>
+        </p>
+        <p class="endcard-legal">
+          © {year} {site.org} · {site.tagline}
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-block-start: clamp(3rem, 8vw, 6rem);
+  }
+
+  /* A full-bleed band already supplies the closing breathing room. */
+  .site-footer--flush {
+    margin-block-start: 0;
+  }
+
+  /* --- back matter --- */
+  .back {
+    border-top: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+    padding-block: clamp(2.5rem, 6vw, 4rem);
+  }
+
+  /* The printed back page sets this as one centred column: the diamond, the
+     chapter's name under it, then the link grid. Nothing hangs left. */
+  .back-inner {
+    display: grid;
+    justify-items: center;
+    gap: clamp(2.25rem, 6vw, 3.25rem);
+    text-align: center;
+  }
+
+  .back-id {
+    display: grid;
+    justify-items: center;
+    gap: 1.5rem;
+    color: var(--blue);
+  }
+
+  .back-mark {
+    display: inline-flex;
+    transition: transform 0.3s var(--ease-spring);
+  }
+
+  .back-mark:hover {
+    transform: scale(1.04);
+  }
+
+  .back-org {
+    display: grid;
+    gap: 0.15rem;
+    color: var(--blue);
+  }
+
+  .back-org-name {
+    /* Held to the width the printed page sets it at, so it breaks after
+       "Association for" the way the page does. */
+    max-width: 16ch;
+    font-size: var(--step-0);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+
+  .back-org-chapter {
+    font-size: var(--step--1);
+    font-weight: 400;
+  }
+
+  /* Three across, as printed. Each cell is its icon over its name.
+
+     `instagram` is the widest name here, and at the script's own floor of 20px
+     it is wider than a third of a phone's screen - so the grid re-points
+     `--step-script` for its labels rather than setting a size on them, and the
+     column gap gives ground first.
+
+     The override keeps the token's own `3.2vw` rate and only drops the floor,
+     so these labels track every other script on the site exactly and are never
+     larger than one - a steeper rate here would overtake the token through the
+     middle widths and print the footer bigger than the headings above it. */
+  .back-links {
+    --step-script: clamp(1rem, 3.2vw, 2rem);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(1.5rem, 5vw, 2.25rem) clamp(1rem, 6vw, 5rem);
+  }
+
+  .back-link {
+    display: grid;
+    justify-items: center;
+    gap: 0.5rem;
+    color: var(--blue);
+    text-decoration: none;
+    transition: transform 0.24s var(--ease-spring);
+  }
+
+  .back-link:hover {
+    transform: translateY(-3px);
+  }
+
+  /* The icons are two-colour artwork - blue ink with the paper knocked out of
+     it - so they are placed rather than tinted, and the box is fixed at both
+     axes to keep the row's baseline steady whatever each glyph's aspect is. */
+  .back-link-icon {
+    width: clamp(28px, 7vw, 40px);
+    height: clamp(28px, 7vw, 40px);
+    object-fit: contain;
+  }
+
+  .back-link-label {
+    text-decoration: underline;
+    text-decoration-thickness: 0.05em;
+    text-underline-offset: 0.14em;
+    text-decoration-color: color-mix(in srgb, var(--blue) 45%, transparent);
+    transition: text-decoration-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
+  }
+
+  .back-link:hover .back-link-label {
+    color: var(--blue-deep);
+    text-decoration-color: var(--blue);
+  }
+
+  /* --- end card --- */
+  /* Opens on the same wave the header closes on, so the blue enters and leaves
+     the page the same way. The wave is cut from the top of the band, so the
+     leading padding has to carry it. */
+  .endcard {
+    position: relative;
+    overflow: hidden;
+    background: var(--blue);
+    color: #fff;
+    padding-block: calc(clamp(3.5rem, 9vw, 6rem) + var(--wave-height)) clamp(3.5rem, 9vw, 6rem);
+    text-align: center;
+  }
+
+  /* The board is centred on the same axis as the wordmark so the two read as
+     one object. The art is 1962x627 - a little over 3:1 - so at full container
+     width its height lands close to the band's own, and most of the five rows
+     clear the crop. Anything wider than that and the band is cropping rows off
+     the top and bottom rather than showing a keyboard. */
+  .endcard-keys {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .endcard-keys :global(svg) {
+    width: 150%;
+    max-width: none;
+    height: auto;
+    flex: none;
+  }
+
+  /* The keys rest as a faint lift of the blue and light up under the cursor;
+     pointer events are re-enabled per key, not on the layer. */
+  .endcard-keys :global(rect) {
+    fill: color-mix(in srgb, #fff 5%, transparent) !important;
+    pointer-events: auto;
+    transition: fill 0.15s var(--ease-out);
+  }
+
+  .endcard-keys :global(rect:hover) {
+    fill: color-mix(in srgb, #fff 18%, transparent) !important;
+  }
+
+  .endcard-keys :global(path) {
+    fill: color-mix(in srgb, #fff 6%, transparent) !important;
+    pointer-events: none;
+    transition: fill 0.15s var(--ease-out);
+  }
+
+  /* The two paths after a key are its letter - recolour only those, or every
+     later key would light up with it. */
+  .endcard-keys :global(rect:hover + path),
+  .endcard-keys :global(rect:hover + path + path) {
+    fill: color-mix(in srgb, #fff 55%, transparent) !important;
+  }
+
+  @media (min-width: 60rem) {
+    .endcard-keys :global(svg) {
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .endcard-keys :global(rect),
+    .endcard-keys :global(path) {
+      transition: none;
+    }
+  }
+
+  .endcard-inner {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 1.4rem;
+  }
+
+  .endcard-mark {
+    text-align: center;
+  }
+
+  .endcard-line {
+    font-size: var(--step-0);
+    color: color-mix(in srgb, #fff 94%, transparent);
+  }
+
+  .endcard-meta {
+    display: grid;
+    gap: 0.5rem;
+    justify-items: center;
+    margin-block-start: clamp(1rem, 4vw, 2.5rem);
+  }
+
+  .endcard-craft {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .heart {
+    width: 22px;
+    height: auto;
+    /* The mark is lifted from the blue end card, so it is already white. */
+    image-rendering: crisp-edges;
+  }
+
+  .endcard-legal {
+    font-size: var(--step--1);
+    color: color-mix(in srgb, #fff 82%, transparent);
+  }
+</style>
+
+<script>
+  import { initKeyboard } from '../scripts/keyboard';
+  initKeyboard('#footer-keys');
+</script>

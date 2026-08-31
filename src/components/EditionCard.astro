@@ -1,0 +1,250 @@
+---
+import type { Edition } from '../lib/types';
+import { editionTitle, readingMinutes, tableOfContents } from '../lib/editions';
+
+/**
+ * An edition, as a card. The thumbnail is a miniature of the printed cover -
+ * same construction as the real one, so the two never drift apart.
+ */
+interface Props {
+  edition: Edition;
+  featured?: boolean;
+}
+
+const { edition, featured = false } = Astro.props;
+const minutes = readingMinutes(edition);
+const toc = tableOfContents(edition);
+const highlights = toc.slice(0, featured ? 6 : 4);
+---
+
+<article class:list={['edition', featured && 'edition--featured']}>
+  <a class="edition-cover" href={`/read/${edition.slug}`} aria-hidden="true" tabindex="-1">
+    <span class:list={['mini', `mini--${edition.cover}`]}>
+      <span class="mini-band"></span>
+      <span class="mini-mark pixel">gr<br />ep</span>
+      <span class="mini-foot">v{edition.number}</span>
+    </span>
+  </a>
+
+  <div class="edition-body">
+    <p class="edition-kicker">
+      {edition.dateline}{edition.name ? ` · ${edition.name}` : ''}
+    </p>
+
+    <h3 class="edition-title">
+      <a href={`/read/${edition.slug}`}>{editionTitle(edition)}</a>
+    </h3>
+
+    <p class="edition-blurb">{edition.blurb}</p>
+
+    <ul class="edition-tags">
+      {highlights.map((item) => <li>{item.title}</li>)}
+      {toc.length > highlights.length && <li class="edition-tags-more">+{toc.length - highlights.length} more</li>}
+    </ul>
+
+    <div class="edition-foot">
+      <p class="edition-facts">{edition.pages} pages · ~{minutes} min</p>
+      <div class="edition-actions">
+        <a class="btn btn--sm btn--ghost" href={`/read/${edition.slug}`}>Read online</a>
+        <a class="edition-pdf" href={edition.pdf} download>PDF</a>
+      </div>
+    </div>
+  </div>
+</article>
+
+<style>
+  .edition {
+    display: grid;
+    gap: clamp(1.1rem, 3vw, 1.8rem);
+    grid-template-columns: minmax(0, 1fr);
+    padding: clamp(1.2rem, 3vw, 1.8rem);
+    background: var(--paper-card);
+    border: 2.5px solid color-mix(in srgb, var(--blue) 22%, transparent);
+    border-radius: var(--radius-lg);
+    transition: border-color 0.3s var(--ease-out), transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+  }
+
+  .edition:hover {
+    border-color: var(--blue);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card);
+  }
+
+  @media (min-width: 40rem) {
+    .edition {
+      grid-template-columns: clamp(8rem, 18vw, 12rem) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+
+  /* --- miniature cover --- */
+  .edition-cover {
+    display: block;
+    text-decoration: none;
+  }
+
+  .mini {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 210 / 297;
+    overflow: hidden;
+    border-radius: var(--radius);
+    border: 2px solid color-mix(in srgb, var(--blue) 24%, transparent);
+    background: var(--paper-warm);
+    color: var(--blue);
+  }
+
+  .mini-band {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 13%;
+    background: var(--blue);
+  }
+
+  .mini-mark {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    line-height: 1.08;
+    text-align: center;
+    letter-spacing: 0.08em;
+  }
+
+  .mini-foot {
+    position: absolute;
+    bottom: 8%;
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: color-mix(in srgb, var(--blue) 70%, transparent);
+  }
+
+  /* --- body --- */
+  .edition-body {
+    display: grid;
+    gap: 0.6rem;
+    align-content: start;
+  }
+
+  .edition-kicker {
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+  }
+
+  .edition-title {
+    font-size: var(--step-2);
+    letter-spacing: -0.025em;
+  }
+
+  .edition-title a {
+    text-decoration: none;
+    transition: color 0.2s var(--ease-out);
+  }
+
+  .edition-title a:hover {
+    color: var(--blue-deep);
+  }
+
+  /* The whole card is clickable via the title's stretched hit area, while
+     the inner buttons stay independently focusable. */
+  .edition-title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .edition {
+    position: relative;
+  }
+
+  .edition-blurb {
+    color: var(--ink-soft);
+    font-size: var(--step--1);
+    line-height: 1.6;
+  }
+
+  .edition-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-block-start: 0.2rem;
+  }
+
+  .edition-tags li {
+    padding: 0.22rem 0.6rem;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--blue) 7%, transparent);
+    color: var(--blue-deep);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+
+  .edition-tags-more {
+    background: transparent !important;
+    color: var(--ink-faint) !important;
+  }
+
+  .edition-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-block-start: 0.6rem;
+  }
+
+  .edition-facts {
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .edition-actions {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .edition-actions .btn {
+    --accent: var(--blue);
+    --accent-contrast: #fff;
+  }
+
+  .edition-pdf {
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--ink-faint);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1.5px;
+  }
+
+  .edition-pdf:hover {
+    color: var(--blue-deep);
+  }
+
+  /* --- featured --- */
+  .edition--featured {
+    border-color: var(--blue);
+    background: linear-gradient(180deg, var(--paper-card), color-mix(in srgb, var(--blue) 3%, var(--paper-card)));
+  }
+
+  @media (min-width: 56rem) {
+    .edition--featured {
+      grid-template-columns: clamp(11rem, 22vw, 16rem) minmax(0, 1fr);
+      padding: clamp(1.6rem, 3.5vw, 2.4rem);
+    }
+
+    .edition--featured .edition-title {
+      font-size: var(--step-3);
+    }
+
+    .edition--featured .edition-blurb {
+      font-size: var(--step-0);
+    }
+  }
+</style>

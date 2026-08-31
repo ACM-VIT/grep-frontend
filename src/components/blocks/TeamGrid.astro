@@ -1,0 +1,141 @@
+---
+import type { TeamItem } from '../../lib/types';
+import { slugify } from '../../lib/types';
+
+/**
+ * The team page: black-and-white portrait beside a script name and a role, in
+ * a bordered card. ACM-W office bearers print in red.
+ *
+ * Not every member has a portrait in the source editions, so cards fall back
+ * to an initials monogram in the same frame - the grid stays even either way.
+ */
+interface Props {
+  items: TeamItem[];
+  /** Portraits that exist in `public/people`, so the fallback is deterministic. */
+  portraits: string[];
+}
+
+const { items, portraits } = Astro.props;
+
+const initials = (name: string) =>
+  name
+    .replace(/^Dr\.?\s+/i, '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+---
+
+<ul class="team">
+  {
+    items.map((item, index) => {
+      const slug = slugify(item.name);
+      const hasPortrait = portraits.includes(slug);
+      return (
+        <li
+          class:list={['member', item.acmw && 'member--acmw']}
+          data-reveal
+          style={`--reveal-delay:${Math.min(index, 8) * 45}ms`}
+        >
+          <div class="member-portrait">
+            {hasPortrait ? (
+              <img src={`/people/${slug}.jpg`} alt="" loading="lazy" decoding="async" />
+            ) : (
+              <span class="member-initials" aria-hidden="true">
+                {initials(item.name)}
+              </span>
+            )}
+          </div>
+
+          <div class="member-id">
+            <p class="member-name script">{item.name}</p>
+            <p class="member-role">{item.role}</p>
+          </div>
+        </li>
+      );
+    })
+  }
+</ul>
+
+<style>
+  .team {
+    display: grid;
+    gap: clamp(0.85rem, 2vw, 1.25rem);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16.5rem), 1fr));
+  }
+
+  .member {
+    --member-accent: var(--blue);
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    align-items: stretch;
+    background: var(--paper-card);
+    border: 2.5px solid var(--member-accent);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+  }
+
+  .member--acmw {
+    --member-accent: var(--red);
+  }
+
+  .member:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* The portraits were recovered from print at inconsistent aspect ratios.
+     Taking them out of flow means the card's height is set by its text, so
+     every card in a row matches regardless of the source crop. */
+  .member-portrait {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 100%;
+    background: color-mix(in srgb, var(--member-accent) 7%, var(--paper-deep));
+    overflow: hidden;
+  }
+
+  .member-portrait img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 22%;
+    /* Portraits print black and white; keep them there so a colour source
+       never breaks the page's two-ink discipline. */
+    filter: grayscale(1) contrast(1.05);
+  }
+
+  .member-initials {
+    font-family: var(--font-pixel);
+    font-size: var(--step-1);
+    color: color-mix(in srgb, var(--member-accent) 70%, transparent);
+    -webkit-font-smoothing: none;
+  }
+
+  .member-id {
+    display: grid;
+    align-content: center;
+    gap: 0.15rem;
+    padding: 1rem 1.1rem;
+    /* Keeps short-named cards from collapsing below the portrait's proportions. */
+    min-height: 8.25rem;
+  }
+
+  .member-name {
+    line-height: 1.06;
+    color: var(--ink);
+  }
+
+  .member-role {
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--member-accent);
+  }
+</style>

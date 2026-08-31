@@ -1,0 +1,124 @@
+---
+import type { BlogItem } from '../../lib/types';
+import { linkTarget } from '../../lib/links';
+
+/**
+ * The blog card, reproducing the printed layout: title and author in the
+ * body, read time set vertically along a ruled spine on the right edge, and
+ * the destination URL along the bottom rule.
+ */
+interface Props {
+  items: BlogItem[];
+}
+
+const { items } = Astro.props;
+
+/** Show the bare path - the printed card prints the link, not a label. */
+const display = (href: string) => href.replace(/^https?:\/\//, '').replace(/\/$/, '');
+---
+
+<ul class="blogs">
+  {
+    items.map((item, index) => (
+      <li data-reveal style={`--reveal-delay:${Math.min(index, 5) * 55}ms`}>
+        <a class="blog" href={item.href} {...linkTarget(item.href)}>
+          <div class="blog-main">
+            <h3 class="blog-title">{item.title}</h3>
+            <p class="blog-by">-{item.author}</p>
+            {item.date && <p class="blog-date">{item.date}</p>}
+            <p class="blog-url">{display(item.href)}</p>
+          </div>
+
+          <div class="blog-spine" aria-hidden="true">
+            <span>{item.readTime}</span>
+          </div>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .blogs {
+    display: grid;
+    gap: clamp(1rem, 2.4vw, 1.5rem);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  }
+
+  .blog {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    height: 100%;
+    background: var(--paper-card);
+    border: 2.5px solid var(--accent);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: inherit;
+    overflow: hidden;
+    transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+  }
+
+  .blog:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card);
+  }
+
+  .blog-main {
+    display: grid;
+    align-content: start;
+    gap: 0.35rem;
+    padding: clamp(1rem, 2.4vw, 1.4rem);
+  }
+
+  .blog-title {
+    font-size: var(--step-1);
+    font-weight: 600;
+    line-height: 1.22;
+    letter-spacing: -0.015em;
+    transition: color 0.2s var(--ease-out);
+  }
+
+  .blog:hover .blog-title {
+    color: var(--accent-deep);
+  }
+
+  .blog-by {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+
+  .blog-date {
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  /* The URL sits on its own rule at the foot of the printed card. */
+  .blog-url {
+    margin-block-start: auto;
+    padding-block-start: 0.75rem;
+    border-top: 1.5px solid color-mix(in srgb, var(--accent) 34%, transparent);
+    color: var(--accent-deep);
+    font-size: var(--step--1);
+    word-break: break-all;
+    align-self: end;
+  }
+
+  /* The vertical read-time spine, printed along the card's right edge. */
+  .blog-spine {
+    display: grid;
+    place-items: center;
+    padding: 0.75rem 0.15rem;
+    border-left: 1.5px solid color-mix(in srgb, var(--accent) 34%, transparent);
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+  }
+
+  .blog-spine span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    color: var(--accent-deep);
+  }
+</style>

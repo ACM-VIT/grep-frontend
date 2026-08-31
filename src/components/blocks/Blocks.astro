@@ -1,0 +1,461 @@
+---
+import type { Block, Section } from '../../lib/types';
+import EntryList from './EntryList.astro';
+import CardList from './CardList.astro';
+import BlogList from './BlogList.astro';
+import FindList from './FindList.astro';
+import TeamGrid from './TeamGrid.astro';
+import { linkTarget } from '../../lib/links';
+
+/**
+ * Renders a section's blocks. Every printed layout primitive maps to exactly
+ * one case here, which is what keeps the reader faithful to the page without
+ * any per-edition markup.
+ */
+interface Props {
+  blocks: Block[];
+  section: Section;
+  portraits: string[];
+}
+
+const { blocks, section, portraits } = Astro.props;
+---
+
+<div class="blocks">
+  {
+    blocks.map((block) => {
+      switch (block.type) {
+        case 'lead':
+          return (
+            <p class="lead" data-reveal>
+              {block.text}
+            </p>
+          );
+
+        case 'p':
+          return (
+            <p class="body" data-reveal>
+              {block.text}
+            </p>
+          );
+
+        case 'h':
+          return (
+            <h3 class="sub" data-reveal>
+              {block.text}
+            </h3>
+          );
+
+        case 'script':
+          return (
+            <p class="script-line script" data-reveal>
+              {block.text}
+            </p>
+          );
+
+        case 'byline':
+          return (
+            <p class="byline script" data-reveal>
+              {block.name}
+            </p>
+          );
+
+        case 'signature':
+          return (
+            <div class="signature" data-reveal>
+              <p class="signature-name">{block.name}</p>
+              {block.lines.map((line) => (
+                <p class="signature-line">{line}</p>
+              ))}
+            </div>
+          );
+
+        case 'timeline':
+          return (
+            <ol class="timeline">
+              {block.items.map((item, index) => (
+                <li class="era" data-reveal style={`--reveal-delay:${Math.min(index, 5) * 60}ms`}>
+                  <div class="era-mark" aria-hidden="true">
+                    <span />
+                  </div>
+                  <div class="era-body">
+                    <p class="era-period pixel">{item.period}</p>
+                    <h3 class="era-title script">{item.title}</h3>
+                    {item.body.map((paragraph) => (
+                      <p class="body">{paragraph}</p>
+                    ))}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          );
+
+        case 'entries':
+          return <EntryList items={block.items} section={section} />;
+
+        case 'cards':
+          return <CardList items={block.items} section={section} />;
+
+        case 'blogs':
+          return <BlogList items={block.items} />;
+
+        case 'finds':
+          return <FindList items={block.items} />;
+
+        case 'team':
+          return <TeamGrid items={block.items} portraits={portraits} />;
+
+        case 'credits':
+          return (
+            <div class="credits" data-reveal>
+              <div class="credit-col">
+                <h3 class="eyebrow">Editors</h3>
+                <ul>
+                  {block.editors.map((name) => (
+                    <li class="script">{name}</li>
+                  ))}
+                </ul>
+              </div>
+              <div class="credit-col">
+                <h3 class="eyebrow">Designers</h3>
+                <ul>
+                  {block.designers.map((name) => (
+                    <li class="script">{name}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          );
+
+        case 'list':
+          return (
+            <ul class="notes">
+              {block.items.map((item, index) => (
+                <li data-reveal style={`--reveal-delay:${Math.min(index, 6) * 45}ms`}>
+                  <span class="note-title">{item.title}</span>
+                  {item.body && <span class="note-body">{item.body}</span>}
+                </li>
+              ))}
+            </ul>
+          );
+
+        case 'links':
+          return (
+            <ul class="linkrow" data-reveal>
+              {block.items.map((link) => (
+                <li>
+                  <a class="btn btn--ghost" href={link.href} {...linkTarget(link.href)}>
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          );
+
+        case 'stats':
+          return (
+            <ul class="stats" data-reveal>
+              {block.items.map((stat) => (
+                <li>
+                  <span class="stat-value pixel">{stat.value}</span>
+                  <span class="stat-label">{stat.label}</span>
+                </li>
+              ))}
+            </ul>
+          );
+
+        case 'award':
+          return (
+            <div class="award" data-reveal>
+              <div class="award-ribbon">
+                <p class="award-sub">{block.sub}</p>
+                <p class="award-title">{block.title}</p>
+                <p class="award-year">{block.year}</p>
+              </div>
+              {block.body?.map((paragraph) => (
+                <p class="body">{paragraph}</p>
+              ))}
+            </div>
+          );
+
+        case 'figure':
+          return (
+            <figure class:list={['figure', block.figure.align === 'full' && 'figure--full']} data-reveal>
+              <img src={block.figure.src} alt={block.figure.alt} loading="lazy" decoding="async" />
+              {block.figure.caption && <figcaption>{block.figure.caption}</figcaption>}
+            </figure>
+          );
+      }
+    })
+  }
+</div>
+
+<style>
+  .blocks {
+    display: grid;
+    gap: 1.15rem;
+  }
+
+  /* Text primitives are held to a comfortable measure; the visual blocks
+     below are allowed the full column. */
+  .lead,
+  .body,
+  .sub,
+  .script-line,
+  .byline,
+  .signature {
+    max-width: var(--measure);
+  }
+
+  .lead {
+    font-size: var(--step-1);
+    line-height: 1.5;
+    letter-spacing: -0.011em;
+    color: var(--ink);
+  }
+
+  .body {
+    color: var(--ink-soft);
+  }
+
+  .sub {
+    font-size: var(--step-2);
+    color: var(--accent);
+    margin-block-start: 0.9rem;
+  }
+
+  .script-line {
+    color: var(--ink-faint);
+    margin-block-start: -0.6rem;
+  }
+
+  .byline {
+    color: var(--ink);
+    margin-block-end: 0.4rem;
+  }
+
+  .signature {
+    margin-block-start: 1.4rem;
+    padding-block-start: 1.1rem;
+    border-top: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    line-height: 1.5;
+  }
+
+  .signature-name {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* --- timeline --- */
+  .timeline {
+    display: grid;
+    gap: 0;
+    margin-block: 0.5rem;
+  }
+
+  .era {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: clamp(1rem, 3vw, 1.9rem);
+  }
+
+  /* A continuous rail with a node per era - the printed squiggle, regularised. */
+  .era-mark {
+    position: relative;
+    width: 2px;
+    background: color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+
+  .era:first-child .era-mark {
+    background: linear-gradient(to bottom, transparent 0 1.15rem, color-mix(in srgb, var(--accent) 28%, transparent) 1.15rem);
+  }
+
+  .era:last-child .era-mark {
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--accent) 28%, transparent) 0 1.15rem, transparent 1.15rem);
+  }
+
+  .era-mark span {
+    position: absolute;
+    top: 0.75rem;
+    left: 50%;
+    width: 13px;
+    height: 13px;
+    transform: translateX(-50%) rotate(45deg);
+    background: var(--paper);
+    border: 2.5px solid var(--accent);
+    border-radius: 3px;
+  }
+
+  .era-body {
+    padding-block: 0 clamp(1.75rem, 4vw, 2.75rem);
+    max-width: var(--measure);
+  }
+
+  .era-period {
+    font-size: var(--step--1);
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+
+  .era-title {
+    color: var(--ink);
+    margin-block: 0.15rem 0.7rem;
+  }
+
+  .era-body .body + .body {
+    margin-block-start: 0.9em;
+  }
+
+  /* --- credits --- */
+  .credits {
+    display: grid;
+    gap: clamp(1.5rem, 5vw, 4rem);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    padding: clamp(1.4rem, 4vw, 2.4rem);
+    background: var(--paper-card);
+    border: 2.5px solid var(--accent);
+    border-radius: var(--radius-lg);
+  }
+
+  .credit-col ul {
+    display: grid;
+    gap: 0.1rem;
+    margin-block-start: 0.7rem;
+  }
+
+  .credit-col li {
+    line-height: 1.25;
+    color: var(--ink);
+  }
+
+  /* --- notes list --- */
+  .notes {
+    display: grid;
+    gap: 0.65rem;
+    max-width: var(--measure);
+  }
+
+  .notes li {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.85rem 1.05rem;
+    background: color-mix(in srgb, var(--accent) 4.5%, transparent);
+    border-left: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+
+  .note-title {
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+  }
+
+  .note-body {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+
+  /* --- link row --- */
+  .linkrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-block-start: 0.5rem;
+  }
+
+  /* --- stats --- */
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(1rem, 4vw, 3rem);
+    padding: clamp(1.2rem, 3vw, 1.8rem) clamp(1.4rem, 4vw, 2.2rem);
+    background: var(--accent);
+    color: var(--accent-contrast);
+    border-radius: var(--radius-lg);
+    margin-block: 0.5rem;
+  }
+
+  .stats li {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .stat-value {
+    font-size: clamp(2rem, 6vw, 3rem);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: var(--step--1);
+    color: color-mix(in srgb, currentColor 78%, transparent);
+  }
+
+  /* --- award --- */
+  .award {
+    display: grid;
+    gap: 1.2rem;
+    justify-items: start;
+  }
+
+  .award-ribbon {
+    display: grid;
+    gap: 0.2rem;
+    padding: clamp(1.1rem, 3vw, 1.6rem) clamp(1.5rem, 5vw, 2.6rem);
+    background: linear-gradient(135deg, #f6d9a0, #f3c877 55%, #e0ab53);
+    border-radius: var(--radius);
+    color: #7a2233;
+    text-align: center;
+    box-shadow: var(--shadow-card);
+  }
+
+  .award-sub {
+    font-size: var(--step--1);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .award-title {
+    font-size: var(--step-3);
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+    color: #c22040;
+  }
+
+  .award-year {
+    font-size: var(--step--1);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  /* --- figures --- */
+  .figure img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+    border: 2.5px solid var(--accent);
+  }
+
+  .figure figcaption {
+    margin-block-start: 0.6rem;
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .figure--full {
+    margin-block: 0.5rem;
+  }
+
+  @media (max-width: 40rem) {
+    .era {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .era-mark {
+      display: none;
+    }
+  }
+</style>

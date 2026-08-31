@@ -1,0 +1,77 @@
+---
+import type { FindItem } from '../../lib/types';
+import { linkTarget } from '../../lib/links';
+
+/** localhost finds - numbered discoveries, printed in the ACM-W red colourway. */
+interface Props {
+  items: FindItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<ol class="finds">
+  {
+    items.map((item, index) => (
+      <li class="find" data-reveal style={`--reveal-delay:${index * 70}ms`}>
+        <span class="find-num pixel" aria-hidden="true">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+
+        <div class="find-body">
+          <h3 class="find-title">
+            <a class="link" href={item.href} {...linkTarget(item.href)}>
+              {item.title}
+            </a>
+          </h3>
+          {item.source && <p class="find-source">Source: {item.source}</p>}
+          <p class="find-copy">{item.body}</p>
+        </div>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .finds {
+    display: grid;
+    gap: clamp(1.5rem, 3.5vw, 2.4rem);
+    counter-reset: find;
+  }
+
+  .find {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: clamp(0.9rem, 2.5vw, 1.5rem);
+    padding-block-end: clamp(1.25rem, 3vw, 1.9rem);
+    border-bottom: 2px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
+  .find:last-child {
+    border-bottom: none;
+    padding-block-end: 0;
+  }
+
+  .find-num {
+    font-size: var(--step-4);
+    color: color-mix(in srgb, var(--accent) 45%, transparent);
+    line-height: 1;
+  }
+
+  .find-title {
+    font-size: var(--step-1);
+    font-weight: 600;
+    line-height: 1.25;
+    margin-block-end: 0.45rem;
+  }
+
+  .find-source {
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    margin-block-end: 0.5rem;
+  }
+
+  .find-copy {
+    color: var(--ink-soft);
+  }
+</style>

@@ -1,0 +1,510 @@
+---
+import Base from '../layouts/Base.astro';
+import EditionCard from '../components/EditionCard.astro';
+import SubscribeForm from '../components/SubscribeForm.astro';
+import Wordmark from '../components/Wordmark.astro';
+import Intro from '../components/Intro.astro';
+import ScrollHint from '../components/ScrollHint.astro';
+import { editions, latestEdition, editionTitle, readingMinutes } from '../lib/editions';
+import { site } from '../lib/site';
+
+const latest = latestEdition;
+const rest = editions.filter((edition) => edition.slug !== latest.slug);
+const minutes = readingMinutes(latest);
+
+/**
+ * The three things the newsletter actually is. Stated plainly, because the
+ * chapter's own copy is plain - the printed editions never oversell.
+ */
+const pillars = [
+  {
+    title: 'What we shipped',
+    body: 'Project cycles, open-source repos, and the platforms the chapter runs on - ExamCooker, UniPool, Conclave and the rest, with the reasoning behind them.',
+    art: '/art/workstation.png',
+  },
+  {
+    title: 'What we ran',
+    body: 'Hackathons, reading groups, CTFs and workshops. Registration counts, speakers, what worked and what we learned doing it.',
+    art: '/art/flag.png',
+  },
+  {
+    title: 'Who did it',
+    body: 'The board, the core, the ACM-W chapter and every contributor credited by name. A newsletter about a community should name the community.',
+    art: '/art/highfive.png',
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Periodical',
+  name: 'grep',
+  alternateName: 'grep - the ACM-VIT newsletter',
+  description: site.description,
+  url: site.url,
+  publisher: { '@type': 'Organization', name: site.orgFull, url: 'https://acmvit.in' },
+};
+---
+
+<Base title={site.name} description={site.description}>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+  {/* Set before first paint so the veil is already up on the first frame -
+      running this from the module below would flash the hero first. */}
+  <script slot="head" is:inline>
+    (() => {
+      const root = document.documentElement;
+      let played = false;
+      try {
+        played = sessionStorage.getItem('grep:intro-played') === '1';
+      } catch {}
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      root.dataset.intro = reduced || played ? 'done' : 'play';
+    })();
+  </script>
+
+  {/* The intro: the board types the wordmark, then hands it to the hero. */}
+  <Intro />
+
+  {/* ---------------------------------------------------------------- hero */}
+  <section class="hero">
+    <img class="hero-art" src="/art/mailbox.png" alt="" aria-hidden="true" />
+
+    <div class="shell hero-inner">
+      <h1 class="hero-title">
+        <Wordmark stacked size="var(--step-wordmark)" />
+        <span class="hero-sub script">by acm-vit</span>
+      </h1>
+
+      <p class="hero-lede" data-reveal style="--reveal-delay:calc(var(--hero-lead) + 80ms)">
+        Your search query for ACM-VIT updates. Events, projects, research and the people behind them - collected,
+        edited, and published as a proper newsletter.
+      </p>
+
+      <div class="hero-actions" data-reveal style="--reveal-delay:calc(var(--hero-lead) + 160ms)">
+        <a class="btn btn--sm" href={`/read/${latest.slug}`}>Read {`v${latest.number}`}</a>
+        <a class="btn btn--sm btn--quiet" href="/editions">Browse the archive</a>
+      </div>
+
+      <p class="hero-meta" data-reveal style="--reveal-delay:calc(var(--hero-lead) + 240ms)">
+        Latest · {latest.dateline} · {latest.pages} pages · ~{minutes} min
+      </p>
+    </div>
+
+    <ScrollHint class="hero-scroll" />
+  </section>
+
+  {/* --------------------------------------------------------------- latest */}
+  <section class="section shell">
+    <header class="section-head" data-reveal>
+      <h2 class="section-title script">The latest edition</h2>
+      <a class="section-link" href="/editions">All editions →</a>
+    </header>
+
+    <div data-reveal style="--reveal-delay:80ms">
+      <EditionCard edition={latest} featured />
+    </div>
+  </section>
+
+  {/* -------------------------------------------------------------- pillars */}
+  <section class="section shell">
+    <header class="section-head" data-reveal>
+      <h2 class="section-title script">What’s inside</h2>
+    </header>
+
+    <ul class="pillars">
+      {
+        pillars.map((pillar, index) => (
+          <li class="pillar" data-reveal style={`--reveal-delay:${index * 90}ms`}>
+            <img class="pillar-art" src={pillar.art} alt="" aria-hidden="true" loading="lazy" />
+            <h3 class="pillar-title">{pillar.title}</h3>
+            <p class="pillar-body">{pillar.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  {/* --------------------------------------------------------------- search */}
+  <section class="section shell">
+    <header class="section-head" data-reveal>
+      <h2 class="section-title script">grep the archive</h2>
+      <p class="section-note">Search every edition. It is, after all, the name.</p>
+    </header>
+
+    <div class="finder" data-reveal style="--reveal-delay:80ms">
+      <div class="finder-bar">
+        <span class="finder-prompt" aria-hidden="true">$ grep -ri</span>
+        <label class="visually-hidden" for="home-search">Search the archive</label>
+        <input
+          class="finder-input"
+          id="home-search"
+          type="search"
+          placeholder="cryptic hunt"
+          autocomplete="off"
+          spellcheck="false"
+          data-search-input
+        />
+      </div>
+
+      <p class="finder-hint" data-search-hint>Type to search {editions.length} editions.</p>
+      <ul class="finder-results" data-search-results></ul>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------------- archive */}
+  {
+    rest.length > 0 && (
+      <section class="section shell">
+        <header class="section-head" data-reveal>
+          <h2 class="section-title script">Back issues</h2>
+        </header>
+
+        <div class="archive">
+          {rest.map((edition, index) => (
+            <div data-reveal style={`--reveal-delay:${index * 80}ms`}>
+              <EditionCard edition={edition} />
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  {/* ----------------------------------------------------------- subscribe */}
+  <section class="cta">
+    <div class="shell cta-inner">
+      <div class="cta-copy" data-reveal>
+        <h2 class="cta-title script">Get the next one first</h2>
+        <p class="cta-body">
+          grep lands a few times a year. One email per edition, straight from the chapter - no drip campaign, no
+          upsell.
+        </p>
+      </div>
+
+      <div class="cta-form" data-reveal style="--reveal-delay:80ms">
+        <SubscribeForm id="home-subscribe" />
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* --------------------------------------------------------------- intro */
+  /* The stage itself lives in Intro.astro. What is left here is the hero's
+     side of the handoff: it stays blank until the typed mark has flown into
+     place, then comes up under it. */
+  :global(html[data-intro='play']) .hero-title {
+    opacity: 0;
+  }
+
+  :global(html[data-intro='play']) .hero-inner {
+    --hero-lead: 2260ms;
+  }
+
+  :global(html[data-intro='play'] .site-header) {
+    animation: intro-band 0.62s var(--ease-spring) 2.06s both;
+  }
+
+  :global(html[data-intro='play']) .hero-art {
+    animation: intro-fade 0.7s var(--ease-out) 2.36s both;
+  }
+
+  .hero-title {
+    transition: opacity 0.32s var(--ease-out);
+  }
+
+  @keyframes intro-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes intro-band {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html[data-intro='play']) .hero-title,
+    :global(html[data-intro='play']) .hero-art,
+    :global(html[data-intro='play'] .site-header) {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ---------------------------------------------------------------- hero */
+  .hero {
+    position: relative;
+    display: grid;
+    align-items: center;
+    overflow: hidden;
+    /* The hero owns the whole first screen: nothing of the next section
+       should show under it, and the mailbox sits in the true bottom-left
+       corner of the viewport. `--header-h` is measured at runtime. */
+    min-height: calc(100vh - var(--header-h, 8rem));
+    /* `dvh` tracks the browser's collapsing toolbars, so nothing of the next
+       section peeks under the fold on a phone. */
+    min-height: calc(100dvh - var(--header-h, 8rem));
+    padding-block: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  /* The copy waits for the veil on the first load and comes straight in on
+     every load after it; the per-element stagger is added on top. */
+  .hero-inner {
+    --hero-lead: 0ms;
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+    text-align: center;
+  }
+
+  /* The wordmark is a child component, so its colour has to be set on an
+     element this file owns and inherited - a scoped `.hero-mark` rule would
+     never match the component's own root. */
+  .hero-title {
+    display: grid;
+    justify-items: center;
+    gap: 0.1rem;
+    margin-block-end: 1.4rem;
+    color: var(--blue);
+  }
+
+  /* Size comes from `.script` - this is the size that sets it. */
+  .hero-sub {
+    color: var(--ink);
+    margin-block-start: 0.15em;
+  }
+
+  .hero-lede {
+    max-width: 52ch;
+    font-size: var(--step-0);
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.7rem;
+    margin-block-start: 1.8rem;
+  }
+
+  .hero-actions .btn {
+    --accent: var(--blue);
+    --accent-contrast: #fff;
+  }
+
+  .hero-meta {
+    margin-block-start: 1.1rem;
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  /* The hero owns the whole first screen, so the cue belongs at the foot of
+     that screen rather than after the copy. */
+  .hero-scroll {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(1rem, 3vw, 2rem);
+    transform: translateX(-50%);
+  }
+
+  /* The mailbox sits in the bottom-left corner of the section at every size -
+     it shrinks on a phone rather than dropping out. */
+  .hero-art {
+    position: absolute;
+    left: clamp(0.4rem, 3vw, 3rem);
+    bottom: clamp(0.4rem, 3vw, 2.5rem);
+    width: clamp(56px, 13vw, 148px);
+    pointer-events: none;
+  }
+
+  /* ------------------------------------------------------------- sections */
+  .section {
+    padding-block: clamp(3rem, 8vw, 5.5rem) 0;
+  }
+
+  .section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-block-end: clamp(1.5rem, 4vw, 2.4rem);
+  }
+
+  .section-title {
+    color: var(--blue);
+  }
+
+  .section-note {
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .section-link {
+    font-size: var(--step--1);
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--blue-deep);
+    transition: transform 0.24s var(--ease-out);
+  }
+
+  .section-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ------------------------------------------------------------- pillars */
+  .pillars {
+    display: grid;
+    gap: clamp(1rem, 2.5vw, 1.5rem);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  }
+
+  .pillar {
+    display: grid;
+    align-content: start;
+    gap: 0.6rem;
+    padding: clamp(1.3rem, 3vw, 1.9rem);
+    background: var(--paper-card);
+    border: 2.5px solid color-mix(in srgb, var(--blue) 20%, transparent);
+    border-radius: var(--radius-lg);
+    transition: border-color 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+  }
+
+  .pillar:hover {
+    border-color: var(--blue);
+    transform: translateY(-3px);
+  }
+
+  .pillar-art {
+    width: clamp(64px, 14vw, 92px);
+    height: auto;
+    margin-block-end: 0.4rem;
+  }
+
+  .pillar-title {
+    font-size: var(--step-1);
+    letter-spacing: -0.02em;
+  }
+
+  .pillar-body {
+    font-size: var(--step--1);
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+
+  /* -------------------------------------------------------------- finder */
+  .finder {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .finder-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.1rem;
+    background: var(--paper-card);
+    border: 2.5px solid color-mix(in srgb, var(--ink) 16%, transparent);
+    border-radius: var(--radius);
+    transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+  }
+
+  .finder-bar:focus-within {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 13%, transparent);
+  }
+
+  .finder-prompt {
+    flex: none;
+    font-size: var(--step-0);
+    color: var(--blue);
+    font-weight: 600;
+  }
+
+  .finder-input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: none;
+    font-size: var(--step-0);
+  }
+
+  .finder-input:focus {
+    outline: none;
+  }
+
+  .finder-input::-webkit-search-cancel-button {
+    filter: grayscale(1);
+  }
+
+  .finder-hint {
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .finder-results {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .finder-results:empty {
+    display: none;
+  }
+
+  /* ------------------------------------------------------------- archive */
+  .archive {
+    display: grid;
+    gap: clamp(1rem, 2.5vw, 1.5rem);
+  }
+
+  /* ----------------------------------------------------------------- cta */
+  .cta {
+    margin-block-start: clamp(3.5rem, 9vw, 6rem);
+    padding-block: clamp(2.5rem, 7vw, 4.5rem);
+    background: var(--blue-wash);
+    border-block: 1px solid color-mix(in srgb, var(--blue) 18%, transparent);
+  }
+
+  .cta-inner {
+    display: grid;
+    gap: clamp(1.5rem, 4vw, 3rem);
+    align-items: center;
+  }
+
+  @media (min-width: 52rem) {
+    .cta-inner {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+
+  .cta-title {
+    color: var(--blue);
+  }
+
+  .cta-body {
+    max-width: 42ch;
+    margin-block-start: 0.5rem;
+    color: var(--ink-soft);
+  }
+</style>
+
+<script>
+  import { initSearch } from '../scripts/search';
+  import { initIntro } from '../scripts/intro';
+  initSearch();
+  initIntro();
+</script>

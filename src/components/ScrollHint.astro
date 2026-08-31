@@ -1,0 +1,95 @@
+---
+/**
+ * The scroll cue.
+ *
+ * Drawn as square dots on a grid rather than as a rule or a glyph, so it is
+ * built the same way the wordmark is - the display face sets `grep` in exactly
+ * these squares, and the cue reads as part of that alphabet rather than as a
+ * borrowed chevron.
+ *
+ * It sits in normal flow and scrolls away with whatever it closes, so there is
+ * nothing to dismiss and no state to keep.
+ */
+interface Props {
+  label?: string;
+  /** Follows the alignment of whatever the cue closes. */
+  align?: 'start' | 'center';
+  class?: string;
+}
+
+const { label = 'scroll', align = 'center', class: className = '' } = Astro.props;
+
+/* A down chevron on a five-by-three grid. Rows are read top to bottom - the
+   animation lights them in that order, which is the direction being asked for. */
+const CHEVRON = [
+  [1, 0, 0, 0, 1],
+  [0, 1, 0, 1, 0],
+  [0, 0, 1, 0, 0],
+];
+---
+
+<div class:list={['scroll-hint no-print', className]} style={`--hint-align:${align}`} aria-hidden="true">
+  <span class="scroll-hint-label">{label}</span>
+
+  <span class="scroll-hint-arrow">
+    {
+      CHEVRON.map((row, y) =>
+        row.map((on, x) => (on ? <i style={`--x:${x};--y:${y}`} /> : null)),
+      )
+    }
+  </span>
+</div>
+
+<style>
+  .scroll-hint {
+    --dot: 6px;
+    --dot-gap: 3px;
+    display: grid;
+    justify-items: var(--hint-align, center);
+    gap: 0.7rem;
+    color: var(--ink-faint);
+  }
+
+  .scroll-hint-label {
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .scroll-hint-arrow {
+    display: grid;
+    grid-template-columns: repeat(5, var(--dot));
+    grid-auto-rows: var(--dot);
+    gap: var(--dot-gap);
+  }
+
+  /* Each dot is placed by its own coordinates, so the pattern above is the
+     single source of the shape - no positional CSS to keep in step with it. */
+  .scroll-hint-arrow i {
+    grid-column: calc(var(--x) + 1);
+    grid-row: calc(var(--y) + 1);
+    background: currentColor;
+    opacity: 0.28;
+    animation: hint-fall 1.6s var(--ease-out) infinite;
+    animation-delay: calc(var(--y) * 150ms);
+  }
+
+  @keyframes hint-fall {
+    0%,
+    60%,
+    100% {
+      opacity: 0.28;
+    }
+    22% {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-hint-arrow i {
+      animation: none;
+      opacity: 0.6;
+    }
+  }
+</style>

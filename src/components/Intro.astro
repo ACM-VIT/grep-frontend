@@ -1,0 +1,147 @@
+---
+/**
+ * The front-page intro.
+ *
+ * The board comes up first and types g-r-e-p one key at a time with nothing
+ * else on screen; the wordmark then lands whole and is handed to the hero -
+ * the mark flies to the hero's own mark and the two cross-fade there, so
+ * nothing jumps.
+ *
+ * Sequencing lives in `scripts/intro.ts`; this file is the stage.
+ */
+---
+
+<div class="intro" data-intro-stage aria-hidden="true">
+  <div class="intro-keys" id="intro-keys"></div>
+
+  <div class="intro-mark" data-intro-mark>
+    <span class="intro-row">
+      <span data-key="g">g</span><span data-key="r">r</span>
+    </span>
+    <span class="intro-row">
+      <span data-key="e">e</span><span data-key="p">p</span>
+    </span>
+  </div>
+</div>
+
+<style>
+  .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    background: var(--paper);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Only ever visible while the sequence is running. */
+  :global(html[data-intro='play']) .intro {
+    opacity: 1;
+  }
+
+  :global(html[data-intro='play']) .intro[data-state='out'] {
+    opacity: 0;
+    transition: opacity 0.42s var(--ease-out);
+  }
+
+  /* --- the board --- */
+  .intro-keys {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(1.04);
+    transition: opacity 0.42s var(--ease-out), transform 0.6s var(--ease-out);
+    pointer-events: none;
+  }
+
+  .intro[data-state='ready'] .intro-keys,
+  .intro[data-state='typing'] .intro-keys {
+    opacity: 1;
+    transform: none;
+  }
+
+  .intro[data-state='out'] .intro-keys {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+
+  .intro-keys :global(svg) {
+    width: 170%;
+    max-width: none;
+    height: auto;
+    flex: none;
+  }
+
+  @media (max-width: 48rem) {
+    .intro-keys :global(svg) {
+      width: 375%;
+    }
+  }
+
+  .intro-keys :global(rect) {
+    fill: color-mix(in srgb, var(--ink) 5%, transparent) !important;
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: fill 0.18s var(--ease-out), transform 0.18s var(--ease-out);
+  }
+
+  .intro-keys :global(path) {
+    fill: color-mix(in srgb, var(--ink) 6%, transparent) !important;
+    transition: fill 0.18s var(--ease-out);
+  }
+
+  /* A struck key: the cap dips and takes the accent, its letter comes up with it. */
+  .intro-keys :global(rect.is-struck) {
+    fill: color-mix(in srgb, var(--blue) 16%, transparent) !important;
+    transform: scale(0.94);
+  }
+
+  .intro-keys :global(rect.is-struck + path),
+  .intro-keys :global(rect.is-struck + path + path) {
+    fill: var(--blue) !important;
+  }
+
+  /* --- the wordmark being typed --- */
+  .intro-mark {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    font-family: var(--font-pixel);
+    font-size: clamp(3.5rem, 12vw, 7.5rem);
+    line-height: 1.08;
+    letter-spacing: 0.1em;
+    color: var(--blue);
+    -webkit-font-smoothing: none;
+  }
+
+  .intro-row {
+    display: block;
+    white-space: pre;
+  }
+
+  /* Each letter waits for its key. */
+  .intro-mark span[data-key] {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(0.08em) scale(0.9);
+  }
+
+  .intro-mark span[data-key].is-typed {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.16s var(--ease-out), transform 0.26s var(--ease-spring);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .intro,
+    .intro-keys,
+    .intro-mark span[data-key] {
+      transition: none;
+    }
+  }
+</style>

@@ -1,0 +1,105 @@
+---
+import Base from '../../layouts/Base.astro';
+import ScrollHint from '../../components/ScrollHint.astro';
+import EditionCard from '../../components/EditionCard.astro';
+import SubscribeForm from '../../components/SubscribeForm.astro';
+import { editions } from '../../lib/editions';
+
+const total = editions.reduce((sum, edition) => sum + edition.pages, 0);
+---
+
+<Base
+  title="Editions"
+  description="Every edition of grep, the ACM-VIT newsletter - read online or download the PDF."
+>
+  <section class="head shell">
+    <h1 class="head-title script" data-reveal style="--reveal-delay:60ms">Every edition</h1>
+    <p class="head-lede" data-reveal style="--reveal-delay:120ms">
+      {editions.length} editions, {total} printed pages. Read them in the browser or take the PDF - both are the same
+      newsletter, laid out for where you are.
+    </p>
+
+    <ScrollHint align="start" class="head-scroll" />
+  </section>
+
+  <section class="list shell">
+    {
+      editions.map((edition, index) => (
+        <div data-reveal style={`--reveal-delay:${index * 90}ms`}>
+          <EditionCard edition={edition} featured={index === 0} />
+        </div>
+      ))
+    }
+  </section>
+
+  <section class="soon shell">
+    <div class="soon-card" data-reveal>
+      <div>
+        <h2 class="soon-title script">Next edition</h2>
+        <p class="soon-body">
+          grep publishes a few times a year, whenever there is enough worth writing down. Subscribe and it arrives the
+          day it ships.
+        </p>
+      </div>
+      <SubscribeForm id="archive-subscribe" />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .head-scroll {
+    margin-block-start: clamp(1.75rem, 5vw, 2.75rem);
+  }
+
+  .head {
+    padding-block: clamp(2.5rem, 7vw, 4.5rem) clamp(1.5rem, 4vw, 2.5rem);
+  }
+
+  .head-title {
+    color: var(--blue);
+    margin-block: 0.3rem 0.8rem;
+  }
+
+  .head-lede {
+    max-width: 52ch;
+    font-size: var(--step-0);
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+
+  .list {
+    display: grid;
+    gap: clamp(1rem, 2.5vw, 1.6rem);
+  }
+
+  .soon {
+    padding-block: clamp(3rem, 8vw, 5rem) 0;
+  }
+
+  .soon-card {
+    display: grid;
+    gap: clamp(1.25rem, 4vw, 2.5rem);
+    align-items: center;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    background: var(--blue-wash);
+    border-radius: var(--radius-lg);
+  }
+
+  @media (min-width: 52rem) {
+    .soon-card {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+
+  .soon-title {
+    color: var(--blue);
+  }
+
+  .soon-body {
+    max-width: 40ch;
+    margin-block-start: 0.4rem;
+    color: var(--ink-soft);
+    font-size: var(--step-0);
+    line-height: 1.6;
+  }
+</style>

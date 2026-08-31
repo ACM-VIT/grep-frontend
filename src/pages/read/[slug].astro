@@ -1,0 +1,284 @@
+---
+import Base from '../../layouts/Base.astro';
+import EditionCover from '../../components/reader/EditionCover.astro';
+import ReaderRail from '../../components/reader/ReaderRail.astro';
+import Blocks from '../../components/blocks/Blocks.astro';
+import { editions, editionTitle, neighbours, readingMinutes } from '../../lib/editions';
+import { artSrc, fallbackArt } from '../../lib/art';
+import { site } from '../../lib/site';
+import fs from 'node:fs';
+import path from 'node:path';
+
+export function getStaticPaths() {
+  return editions.map((edition) => ({ params: { slug: edition.slug }, props: { edition } }));
+}
+
+const { edition } = Astro.props;
+const { previous, next } = neighbours(edition.slug);
+const minutes = readingMinutes(edition);
+
+// Which members actually have a portrait extracted from the printed editions.
+// Resolved at build time so the team grid never renders a broken image.
+const peopleDir = path.join(process.cwd(), 'public', 'people');
+const portraits = fs.existsSync(peopleDir)
+  ? fs.readdirSync(peopleDir).map((file) => file.replace(/\.(jpe?g|png|webp)$/i, ''))
+  : [];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'PublicationIssue',
+  issueNumber: edition.number,
+  name: editionTitle(edition),
+  datePublished: edition.isoDate,
+  description: edition.blurb,
+  url: new URL(`/read/${edition.slug}`, site.url).href,
+  isPartOf: {
+    '@type': 'Periodical',
+    name: 'grep',
+    publisher: { '@type': 'Organization', name: site.orgFull, url: 'https://acmvit.in' },
+  },
+};
+---
+
+<Base
+  title={editionTitle(edition)}
+  description={edition.blurb}
+  bare={false}
+>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+  <div class="reader-progress no-print" role="progressbar" aria-label="Reading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <span class="reader-progress-bar" data-reader-bar></span>
+  </div>
+
+  <EditionCover edition={edition} />
+
+  <div class="reader shell-wide" id="reader-start">
+    <ReaderRail edition={edition} />
+
+    <article class="reader-article" data-reader-article>
+      {
+        edition.sections.map((section, index) => {
+          const accent = section.accent ?? 'blue';
+          const art = section.art ?? fallbackArt(section.id, index, accent);
+          return (
+            <section class="chapter" id={section.id} data-accent={accent} data-reader-section>
+              <header class="chapter-head">
+                <div class="chapter-heading">
+                  <h2 class="chapter-title script">{section.title}</h2>
+                  <p class="chapter-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</p>
+                </div>
+
+                <img class="chapter-art" src={artSrc(art)} alt="" loading="lazy" decoding="async" aria-hidden="true" />
+              </header>
+
+              <Blocks blocks={section.blocks} section={section} portraits={portraits} />
+            </section>
+          );
+        })
+      }
+
+      <footer class="reader-end">
+        <p class="reader-end-mark pixel">end of {editionTitle(edition).toLowerCase()}</p>
+        <p class="reader-end-meta">
+          {edition.footerLabel} · ~{minutes} min read
+        </p>
+
+        <nav class="reader-nav" aria-label="Other editions">
+          {
+            previous ? (
+              <a class="reader-nav-card" href={`/read/${previous.slug}`}>
+                <span class="eyebrow">Previous edition</span>
+                <span class="reader-nav-title">{editionTitle(previous)}</span>
+              </a>
+            ) : (
+              <span />
+            )
+          }
+          {
+            next && (
+              <a class="reader-nav-card reader-nav-card--next" href={`/read/${next.slug}`}>
+                <span class="eyebrow">Next edition</span>
+                <span class="reader-nav-title">{editionTitle(next)}</span>
+              </a>
+            )
+          }
+        </nav>
+
+        <div class="reader-cta no-print">
+          <p>Want the next one in your inbox?</p>
+          <a class="btn" href="/subscribe">Subscribe to grep</a>
+        </div>
+      </footer>
+    </article>
+  </div>
+</Base>
+
+<style>
+  /* --- progress --- */
+  .reader-progress {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 80;
+    height: 3px;
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+
+  .reader-progress-bar {
+    display: block;
+    height: 100%;
+    background: var(--blue);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  /* --- layout --- */
+  .reader {
+    display: grid;
+    gap: clamp(2rem, 5vw, 4rem);
+    padding-block: clamp(2.5rem, 6vw, 4.5rem);
+    scroll-margin-top: 5rem;
+  }
+
+  @media (min-width: 64rem) {
+    .reader {
+      grid-template-columns: 17.5rem minmax(0, 1fr);
+    }
+  }
+
+  .reader-article {
+    display: grid;
+    gap: clamp(3rem, 8vw, 6rem);
+    /* The rail owns the left column; the article keeps a readable measure. */
+    max-width: 46rem;
+  }
+
+  /* --- chapters --- */
+  .chapter {
+    scroll-margin-top: 5.5rem;
+  }
+
+  .chapter-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-block-end: clamp(1.25rem, 3vw, 2rem);
+  }
+
+  /* The chapter number hangs in the left margin, level with the title's
+     baseline, so nothing sits above the script heading. On narrow screens
+     there is no margin to hang in, so it drops under the title instead. */
+  .chapter-heading {
+    position: relative;
+  }
+
+  .chapter-index {
+    font-size: var(--step--1);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--accent) 62%, transparent);
+    margin-block-start: 0.45rem;
+  }
+
+  @media (min-width: 72rem) {
+    .chapter-index {
+      position: absolute;
+      right: calc(100% + 1.1rem);
+      top: 0.55em;
+      margin-block-start: 0;
+    }
+  }
+
+  .chapter-title {
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  /* Marginal illustration, as printed in the top-right of the page. */
+  .chapter-art {
+    flex: none;
+    width: clamp(80px, 16vw, 168px);
+    height: auto;
+    opacity: 0.92;
+  }
+
+  @media (max-width: 34rem) {
+    .chapter-art {
+      display: none;
+    }
+  }
+
+  /* --- end matter --- */
+  .reader-end {
+    display: grid;
+    gap: 1rem;
+    padding-block-start: clamp(2rem, 5vw, 3rem);
+    border-top: 2.5px solid color-mix(in srgb, var(--blue) 30%, transparent);
+  }
+
+  .reader-end-mark {
+    font-size: var(--step-0);
+    color: var(--blue);
+  }
+
+  .reader-end-meta {
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .reader-nav {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    margin-block-start: 1.25rem;
+  }
+
+  .reader-nav-card {
+    display: grid;
+    gap: 0.3rem;
+    padding: 1rem 1.2rem;
+    border: 2.5px solid color-mix(in srgb, var(--blue) 26%, transparent);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--ink);
+    transition: border-color 0.24s var(--ease-out), transform 0.24s var(--ease-out);
+  }
+
+  .reader-nav-card:hover {
+    border-color: var(--blue);
+    transform: translateY(-2px);
+  }
+
+  .reader-nav-card--next {
+    text-align: right;
+  }
+
+  .reader-nav-title {
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  .reader-cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-block-start: 1.5rem;
+    padding: clamp(1.2rem, 3vw, 1.8rem);
+    background: var(--blue-wash);
+    border-radius: var(--radius-lg);
+  }
+
+  .reader-cta p {
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin-inline-end: auto;
+  }
+</style>
+
+<script>
+  import { initReader } from '../../scripts/reader';
+  initReader();
+</script>

@@ -1,0 +1,561 @@
+/*
+ * grep - design system
+ *
+ * The tokens below are lifted from the printed editions: the paper, the two
+ * inks (ACM blue and the ACM-W red used for its sections), and the four
+ * typefaces - a pixel display face for wordmarks and event titles, a script
+ * for section headings, and a grotesque for everything else.
+ * Everything on the site is composed from these.
+ */
+
+/* ---------------------------------------------------------------- fonts */
+@import '@fontsource/borel/latin-400.css';
+@import '@fontsource-variable/dm-sans/index.css';
+
+/* ChessType is the chapter's own display face - the one the printed wordmark
+   and event titles are set in. Self-hosted; there is no web-font source. */
+@font-face {
+  font-family: 'ChessType';
+  src:
+    url('/fonts/ChessType.woff2') format('woff2'),
+    url('/fonts/ChessType.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------------------------------------------------------- tokens */
+:root {
+  /* Paper and ink. The editions are printed on a warm cream stock with a
+     visible grain; `--paper` is that stock, `--ink` the near-black body copy. */
+  --paper: #f6f2df;
+  --paper-warm: #f2ecd6;
+  --paper-deep: #ebe4c9;
+  --paper-card: #faf7ea;
+  --ink: #16161a;
+  --ink-soft: #3d3d46;
+  --ink-faint: #6f6f7a;
+
+  /* ACM blue - the chapter's primary, matching acmvit.in. */
+  --blue: #2023fe;
+  --blue-deep: #1418c9;
+  --blue-bright: #5b6bff;
+  --blue-pale: #b4b7f5;
+  --blue-wash: #e4e5fb;
+
+  /* ACM-W red - used wholesale for ACM-W and localhost finds sections. */
+  --red: #ee3a55;
+  --red-deep: #c9203b;
+  --red-pale: #ffc9d2;
+  --red-wash: #fde6ea;
+
+  /* Accent-driven colours. Sections re-point these; everything downstream
+     (rules, headings, borders, links) follows without extra selectors. */
+  --accent: var(--blue);
+  --accent-deep: var(--blue-deep);
+  --accent-pale: var(--blue-pale);
+  --accent-wash: var(--blue-wash);
+  --accent-contrast: #ffffff;
+
+  /* Type */
+  --font-pixel: 'ChessType', 'Courier New', monospace;
+  --font-script: 'Borel', 'Segoe Script', cursive;
+  --font-sans: 'DM Sans Variable', 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+  /* The type scale. Every size is a multiple of 4px on a 16px root, so text
+     lands on the same grid the spacing does. The steps are fixed rather than
+     fluid: the scale tops out at 32px, which reads the same on a phone as on a
+     desktop, and a clamp between two grid values spends most of its range off
+     the grid. The two exceptions below are deliberate.
+
+     The hero sets the reference. Its lede is `--step-0` and its buttons and
+     dateline are `--step--1`; every other section is composed from the same
+     steps so nothing runs larger than the first screen does. */
+  --step--1: 0.75rem; /* 12 - meta, eyebrows, captions, small buttons */
+  --step-0: 1rem; /*    16 - body copy, ledes, inputs */
+  --step-1: 1.25rem; /* 20 - card titles, h3 */
+  --step-2: 1.5rem; /*  24 - large h3, standfirsts */
+  --step-3: 1.75rem; /* 28 - h2 in the sans */
+  --step-4: 2rem; /*    32 - page titles */
+  --step-5: 2.5rem; /*  40 - display, hero-adjacent only */
+
+  /* Exception one: the script. Borel's cap height is 0.72em, so it needs to
+     run larger than an equivalent sans to match it optically. This is the
+     hero's `by acm-vit` size, snapped to the grid at both ends, and it is the
+     size every script heading on the site uses. */
+  --step-script: clamp(1.25rem, 3.2vw, 2rem); /* 20 -> 32 */
+
+  /* Exception two: the pixel wordmark, which is artwork rather than text and
+     has to scale with the viewport to hold the first screen. Both ends sit on
+     the grid. */
+  --step-wordmark: clamp(2.75rem, 9.5vw, 6rem); /* 44 -> 96 */
+
+  /* Rhythm */
+  --measure: 68ch;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+  --shell: 78rem;
+  --shell-wide: 92rem;
+
+  /* Print-derived surfaces */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 22px;
+  /* Buttons match the subscribe control on acmvit.in/grep - `rounded-lg`. */
+  --radius-btn: 8px;
+  --border: 2.5px solid var(--accent);
+  --hairline: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+
+  --shadow-card: 0 1px 0 color-mix(in srgb, var(--ink) 7%, transparent),
+    0 12px 28px -18px color-mix(in srgb, var(--ink) 42%, transparent);
+  --shadow-lift: 0 2px 0 color-mix(in srgb, var(--ink) 9%, transparent),
+    0 26px 50px -26px color-mix(in srgb, var(--ink) 46%, transparent);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.3, 0.5, 1);
+
+  color-scheme: light;
+}
+
+/* Sections that print in the ACM-W colourway. */
+[data-accent='red'] {
+  --accent: var(--red);
+  --accent-deep: var(--red-deep);
+  --accent-pale: var(--red-pale);
+  --accent-wash: var(--red-wash);
+}
+
+/* z0d1ak prints on black. */
+[data-accent='ink'] {
+  --accent: #14141a;
+  --accent-deep: #000000;
+  --accent-pale: #b9b9c4;
+  --accent-wash: #e7e7ec;
+}
+
+/* ---------------------------------------------------------------- reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  /* Sticky headers must not eat anchor targets. */
+  scroll-padding-top: 6rem;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  line-height: 1.62;
+  color: var(--ink);
+  background-color: var(--paper);
+  /* The paper grain, reproduced as a tiled SVG so it costs nothing. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+img,
+svg,
+picture {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+a {
+  color: inherit;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+/* ---------------------------------------------------------------- type */
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  line-height: 1.08;
+  text-wrap: balance;
+  letter-spacing: -0.02em;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+.pixel {
+  font-family: var(--font-pixel);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  /* ChessType draws its lowercase as the clean outlined pixel letterforms used
+     throughout the printed editions; its uppercase is a heavier filled variant.
+     Lowercasing here lets copy stay written in caps and still render as printed. */
+  text-transform: lowercase;
+  /* A bitmap face - keep the edges crisp at display sizes. */
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+}
+
+/* Borel's glyph box is a full 2em tall (ascent 986 + descent 1014 on a 1000
+   upem), so its default leading is enormous. Pulling the line-height down to
+   ~1.1 makes script headings sit like the printed ones. Its cap height is only
+   0.72em, so script sizes also run larger than an equivalent sans. */
+.script {
+  font-family: var(--font-script);
+  font-weight: 400;
+  /* One size for every script heading on the site - the hero's. Borel is the
+     loudest face here, so letting each section pick its own size was what made
+     the page read as three different type systems. */
+  font-size: var(--step-script);
+  /* Borel's joins meet only when the advance is untouched: any positive
+     tracking - and any rounding of the advance - opens a seam between the
+     exit and entry strokes. */
+  letter-spacing: 0;
+  text-rendering: geometricPrecision;
+  line-height: 1.1;
+  /* Borel's ascenders and loops overshoot the tightened line box, so block
+     headings get a little room above to stop them touching whatever sits
+     over them (eyebrows, section numbers). Inline uses are unaffected. */
+  padding-block-start: 0.16em;
+}
+
+.eyebrow {
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.measure {
+  max-width: var(--measure);
+}
+
+/* ---------------------------------------------------------------- layout */
+.shell {
+  width: min(100% - (var(--gutter) * 2), var(--shell));
+  margin-inline: auto;
+}
+
+.shell-wide {
+  width: min(100% - (var(--gutter) * 2), var(--shell-wide));
+  margin-inline: auto;
+}
+
+.stack > * + * {
+  margin-block-start: var(--stack-gap, 1.1em);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 200;
+  padding: 0.7rem 1.1rem;
+  background: var(--blue);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  transform: translateY(-160%);
+  transition: transform 0.2s var(--ease-out);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* ---------------------------------------------------------------- pieces */
+
+/* The wave that closes a full-bleed band. It is masked out of the band itself,
+   so it works whatever the band is painted - no second asset, and it recolours
+   with the accent.
+
+   One period is drawn as two cubics running trough -> crest -> trough with a
+   flat tangent at both ends. That is what makes it a wave rather than a row of
+   scallops: neighbouring periods meet tangent to tangent, so the edge has no
+   corners in it anywhere.
+
+   `--wave-period` is kept at four times the depth. Steeper than that and the
+   curve approaches vertical at the crossings, where an 8px-tall mask has too
+   few pixels to antialias and the edge starts to look stepped. */
+.wave-edge {
+  --wave-height: 8px;
+  --wave-period: calc(var(--wave-height) * 4);
+  --wave-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' preserveAspectRatio='none'%3E%3Cpath d='M0 0C8 0 8 32 16 32C24 32 24 0 32 0Z' fill='%23000'/%3E%3C/svg%3E");
+  position: relative;
+  padding-block-end: var(--wave-height);
+  /* Two mask layers: the solid body above the wave, then one tile per period
+     along the bottom. Centring the repeat keeps both ends symmetrical at any
+     viewport width. */
+  -webkit-mask-image: linear-gradient(#000 0 0), var(--wave-tile);
+  mask-image: linear-gradient(#000 0 0), var(--wave-tile);
+  -webkit-mask-size: 100% calc(100% - var(--wave-height)), var(--wave-period) var(--wave-height);
+  mask-size: 100% calc(100% - var(--wave-height)), var(--wave-period) var(--wave-height);
+  -webkit-mask-position: 0 0, 50% 100%;
+  mask-position: 0 0, 50% 100%;
+  -webkit-mask-repeat: no-repeat, repeat-x;
+  mask-repeat: no-repeat, repeat-x;
+}
+
+/* The same edge, flipped, for a band that opens a page rather than closing it. */
+.wave-edge--top {
+  --wave-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' preserveAspectRatio='none'%3E%3Cpath d='M0 32C8 32 8 0 16 0C24 0 24 32 32 32Z' fill='%23000'/%3E%3C/svg%3E");
+  padding-block: var(--wave-height) 0;
+  -webkit-mask-position: 0 100%, 50% 0;
+  mask-position: 0 100%, 50% 0;
+}
+
+/* The same wave stood on its end, for a sheet whose edge faces into the page
+   rather than down it. The period now runs along the y axis and the depth along
+   the x, so `--wave-height` still means the same thing. */
+.wave-edge--left {
+  --wave-height: 7px;
+  --wave-period: calc(var(--wave-height) * 4);
+  --wave-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' preserveAspectRatio='none'%3E%3Cpath d='M32 0C32 8 0 8 0 16C0 24 32 24 32 32Z' fill='%23000'/%3E%3C/svg%3E");
+  -webkit-mask-image: linear-gradient(#000 0 0), var(--wave-tile);
+  mask-image: linear-gradient(#000 0 0), var(--wave-tile);
+  -webkit-mask-size: calc(100% - var(--wave-height)) 100%, var(--wave-height) var(--wave-period);
+  mask-size: calc(100% - var(--wave-height)) 100%, var(--wave-height) var(--wave-period);
+  -webkit-mask-position: 100% 0, 0 50%;
+  mask-position: 100% 0, 0 50%;
+  -webkit-mask-repeat: no-repeat, repeat-y;
+  mask-repeat: no-repeat, repeat-y;
+}
+
+/* Buttons - the site's one interactive shape, from the print card border. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55em;
+  padding: 0.78em 1.4em;
+  border-radius: var(--radius-btn);
+  font-weight: 600;
+  /* The hero pair sets the button size for the whole site. */
+  font-size: var(--step--1);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  border: 2.5px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  transition:
+    transform 0.24s var(--ease-spring),
+    box-shadow 0.24s var(--ease-out),
+    background-color 0.2s var(--ease-out),
+    color 0.2s var(--ease-out);
+  will-change: transform;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--accent) 80%, transparent);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* The compact size. Three places had each arrived at their own slightly
+   different padding for the same shape; this is the hero pair's, which is the
+   one the rest were approximating. Buttons that carry a page - the cover, the
+   404, the closing call to action - stay at the full size above. */
+.btn--sm {
+  padding: 0.62em 1.15em;
+  border-width: 2px;
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--accent);
+}
+
+.btn--ghost:hover {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.btn--quiet {
+  border-color: color-mix(in srgb, var(--ink) 20%, transparent);
+  background: transparent;
+  color: var(--ink);
+}
+
+.btn--quiet:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: none;
+}
+
+/* The print card: cream fill, thick accent rule, generous radius. */
+.card {
+  position: relative;
+  background: var(--paper-card);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.35rem, 3vw, 2.1rem);
+}
+
+/* Links inside body copy keep the printed underline. */
+.prose a,
+.link {
+  color: var(--accent-deep);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  transition: text-decoration-color 0.18s var(--ease-out), color 0.18s var(--ease-out);
+}
+
+.prose a:hover,
+.link:hover {
+  text-decoration-color: var(--accent);
+}
+
+/* Search hits are injected as HTML strings by `search.ts`, so their styles
+   have to live here rather than in a scoped component block. */
+.hit a {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.85rem 1.05rem;
+  border: 2px solid color-mix(in srgb, var(--blue) 18%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--paper-card);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s var(--ease-out), transform 0.2s var(--ease-out);
+}
+
+.hit a:hover {
+  border-color: var(--blue);
+  transform: translateX(3px);
+}
+
+.hit-meta {
+  font-size: var(--step--1);
+  letter-spacing: 0.02em;
+  color: var(--blue-deep);
+}
+
+.hit-text {
+  font-size: var(--step--1);
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.hit mark {
+  padding: 0 0.12em;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--blue) 20%, transparent);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- motion */
+
+/* Scroll-reveal. Elements start displaced and settle as they enter; the
+   `is-in` class is added by an IntersectionObserver in Reveal.astro. Without
+   JS the `no-js` guard leaves everything visible. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s var(--ease-out),
+    transform 0.7s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+html.no-js [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------- print */
+@media print {
+  .site-header,
+  .site-footer,
+  .reader-rail,
+  .reader-progress,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+}
