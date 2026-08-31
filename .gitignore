@@ -1,0 +1,22 @@
+# Dependencies. Committing these breaks the build on any machine that is not
+# this one: npm resolves platform-specific binaries (@rollup/rollup-*,
+# @esbuild/*, sharp) at install time, and a darwin-arm64 tree checked out on
+# Vercel's linux-x64 builder has no matching module to load.
+node_modules/
+
+# Build output
+dist/
+.astro/
+.vercel/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Local tooling
+.claude/
+graphify-out/
+
+# macOS
+.DS_Store
