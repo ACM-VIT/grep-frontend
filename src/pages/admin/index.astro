@@ -1,0 +1,516 @@
+---
+import Base from '../../layouts/Base.astro';
+
+/**
+ * The moderator console.
+ *
+ * Reachable only by typing /admin - nothing on the site links here, and the
+ * page is noindex. Everything below the sign-in happens in the browser against
+ * `grep-backend`; this page renders no edition data itself, so it stays a
+ * static shell and there is nothing here for an unauthenticated visitor to
+ * read. Both values below are PUBLIC_ on purpose: an OAuth client ID and an API
+ * origin are meant to be seen, and neither grants anything on its own. The
+ * allowlist that does grant something lives in the backend's environment.
+ */
+const apiBase = (import.meta.env.PUBLIC_GREP_API_URL ?? 'http://localhost:8080').replace(/\/+$/, '');
+const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID ?? '';
+---
+
+<Base title="Admin" description="grep moderator console." noindex>
+  <div class="admin" data-api={apiBase} data-client-id={googleClientId}>
+    {/* --- signed out --- */}
+    <section class="gate" data-view="gate">
+      <h1 class="gate-title script">Moderator</h1>
+      <p class="gate-body">
+        Sign in with an approved ACM-VIT Google account. Everything here is written straight to the live site.
+      </p>
+
+      {
+        googleClientId ? (
+          <div class="gate-button" id="google-button" />
+        ) : (
+          <p class="flash flash--error">
+            <code>PUBLIC_GOOGLE_CLIENT_ID</code> is not set on this site, so sign-in cannot start. See
+            <strong> Creating the Google sign-in key</strong> in the backend README.
+          </p>
+        )
+      }
+
+      <p class="gate-note" data-gate-error hidden></p>
+    </section>
+
+    {/* --- signed in --- */}
+    <section class="console" data-view="console" hidden>
+      <header class="bar">
+        <div>
+          <h1 class="bar-title script">Moderator</h1>
+          <p class="bar-who" data-who></p>
+        </div>
+        <div class="bar-actions">
+          <button class="btn btn--sm btn--quiet" type="button" data-tab="editions">Editions</button>
+          <button class="btn btn--sm btn--quiet" type="button" data-tab="subscribers">Subscribers</button>
+          <button class="btn btn--sm btn--quiet" type="button" data-signout>Sign out</button>
+        </div>
+      </header>
+
+      <p class="flash" data-flash hidden></p>
+
+      {/* --- editions --- */}
+      <div data-panel="editions">
+        <div class="panel-head">
+          <h2 class="panel-title">Editions</h2>
+          <button class="btn btn--sm" type="button" data-new>New edition</button>
+        </div>
+
+        <p class="hint">
+          <strong>grep v0</strong> and <strong>grep v1</strong> are built into the site and are not listed here. Publishing
+          an edition with one of their slugs overrides it.
+        </p>
+
+        <div class="list" data-editions>
+          <p class="muted">Loading…</p>
+        </div>
+      </div>
+
+      {/* --- subscribers --- */}
+      <div data-panel="subscribers" hidden>
+        <div class="panel-head">
+          <h2 class="panel-title">Subscribers</h2>
+          <button class="btn btn--sm btn--quiet" type="button" data-export>Download CSV</button>
+        </div>
+        <p class="hint">
+          Captured by the site's own form. Your mailing-list provider is still the source of truth for sending.
+        </p>
+        <div class="list" data-subscribers>
+          <p class="muted">Loading…</p>
+        </div>
+      </div>
+    </section>
+
+    {/* --- editor --- */}
+    <section class="editor" data-view="editor" hidden>
+      <div class="panel-head">
+        <h2 class="panel-title" data-editor-title>New edition</h2>
+        <button class="btn btn--sm btn--quiet" type="button" data-cancel>Back</button>
+      </div>
+
+      <form class="form" data-form novalidate>
+        <fieldset class="mode">
+          <legend>What are you publishing?</legend>
+          <label>
+            <input type="radio" name="kind" value="pdf" checked />
+            <span>
+              <strong>Just the PDF</strong>
+              <em>A cover, a download, and nothing to transcribe. The quick path.</em>
+            </span>
+          </label>
+          <label>
+            <input type="radio" name="kind" value="full" />
+            <span>
+              <strong>The full edition</strong>
+              <em>Also carries sections, so the web reader has something to read.</em>
+            </span>
+          </label>
+        </fieldset>
+
+        <div class="grid">
+          <label class="field">
+            <span>Slug</span>
+            <input name="slug" placeholder="grep-v2" autocomplete="off" spellcheck="false" required />
+            <em>The URL: /read/<b data-slug-preview>grep-v2</b>. Lowercase words joined by hyphens. Cannot be changed later.</em>
+          </label>
+
+          <label class="field">
+            <span>Number</span>
+            <input name="number" type="number" min="0" step="1" placeholder="2" required />
+            <em>2 for v2. Sorts the archive - highest is newest.</em>
+          </label>
+
+          <label class="field">
+            <span>Name <i>optional</i></span>
+            <input name="name" placeholder="Origins Edition" autocomplete="off" />
+            <em>Only for editions with a title beyond the number.</em>
+          </label>
+
+          <label class="field">
+            <span>Dateline</span>
+            <input name="dateline" placeholder="March 2027" autocomplete="off" required />
+            <em>As printed on the cover.</em>
+          </label>
+
+          <label class="field">
+            <span>Publication date</span>
+            <input name="isoDate" type="date" required />
+            <em>Used for the RSS feed and ordering.</em>
+          </label>
+
+          <label class="field">
+            <span>Pages</span>
+            <input name="pages" type="number" min="0" step="1" placeholder="32" />
+            <em>Printed page count. 0 if you would rather not say.</em>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Tagline</span>
+          <input name="tagline" placeholder="Your search query for ACM-VIT updates." autocomplete="off" />
+          <em>One line, shown under the wordmark on the cover.</em>
+        </label>
+
+        <label class="field">
+          <span>Blurb</span>
+          <textarea name="blurb" rows="3" placeholder="What this edition covers, in two or three sentences."></textarea>
+          <em>Shown on the archive card and used as the page description.</em>
+        </label>
+
+        <div class="field">
+          <span>PDF</span>
+          <div class="pdf-row">
+            <input name="pdf" placeholder="https://storage.googleapis.com/…/grep-v2.pdf" autocomplete="off" required />
+            <label class="btn btn--sm btn--quiet upload">
+              <input type="file" accept="application/pdf" hidden data-upload />
+              Upload
+            </label>
+          </div>
+          <em>
+            Paste a link from any bucket - GCS, S3, R2 - or upload the file and this fills itself in. The object has to
+            be publicly readable.
+          </em>
+          <p class="upload-state" data-upload-state hidden></p>
+        </div>
+
+        <label class="field" data-sections-field hidden>
+          <span>Sections</span>
+          <textarea name="sections" rows="14" spellcheck="false" placeholder="[]"></textarea>
+          <em>
+            The reader's content, as a JSON array. Copy the shape from
+            <code>src/lib/editions/v1.ts</code> in the website repo. Leave it empty and this becomes a PDF-only edition.
+          </em>
+          <p class="json-state" data-json-state hidden></p>
+        </label>
+
+        <label class="field">
+          <span>Cover</span>
+          <select name="cover">
+            <option value="keyboard">Keyboard</option>
+            <option value="brick">Brick</option>
+          </select>
+          <em>Which printed cover pattern the reader opens with.</em>
+        </label>
+
+        <fieldset class="mode">
+          <legend>Status</legend>
+          <label>
+            <input type="radio" name="status" value="draft" checked />
+            <span><strong>Draft</strong><em>Saved here, invisible on the site.</em></span>
+          </label>
+          <label>
+            <input type="radio" name="status" value="published" />
+            <span><strong>Published</strong><em>Live on grep.acmvit.in within about a minute.</em></span>
+          </label>
+        </fieldset>
+
+        <p class="flash flash--error" data-form-error hidden></p>
+
+        <div class="form-actions">
+          <button class="btn" type="submit" data-save>Save edition</button>
+          <button class="btn btn--sm btn--quiet danger" type="button" data-delete hidden>Delete</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .admin {
+    width: min(100% - 2rem, 62rem);
+    margin-inline: auto;
+    padding-block: clamp(2rem, 6vw, 4rem);
+  }
+
+  /* --- gate --- */
+  .gate {
+    display: grid;
+    justify-items: start;
+    gap: 1.25rem;
+    max-width: 42ch;
+    padding-block: clamp(2rem, 10vh, 6rem);
+  }
+
+  .gate-title,
+  .bar-title {
+    color: var(--blue);
+  }
+
+  .gate-body {
+    color: var(--ink-soft);
+  }
+
+  .gate-note {
+    font-size: var(--step--1);
+    color: var(--red-deep);
+  }
+
+  /* --- console --- */
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block-end: 1.25rem;
+    border-bottom: 2.5px solid color-mix(in srgb, var(--blue) 20%, transparent);
+  }
+
+  .bar-who {
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .bar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .bar-actions [aria-current='true'] {
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  .panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-block: clamp(1.5rem, 4vw, 2.25rem) 0.5rem;
+  }
+
+  .panel-title {
+    font-size: var(--step-2);
+  }
+
+  .hint {
+    max-width: 68ch;
+    margin-block-end: 1.25rem;
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .muted {
+    color: var(--ink-faint);
+    font-size: var(--step--1);
+  }
+
+  .list {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    padding: 0.9rem 1.1rem;
+    background: var(--paper-card);
+    border: 2px solid color-mix(in srgb, var(--ink) 12%, transparent);
+    border-radius: var(--radius);
+  }
+
+  .row-main {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .row-title {
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  .row-meta {
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: var(--step--1);
+    font-weight: 600;
+  }
+
+  .tag--published {
+    background: var(--blue-wash);
+    color: var(--blue-deep);
+  }
+
+  .tag--draft {
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+    color: var(--ink-soft);
+  }
+
+  /* --- form --- */
+  .form {
+    display: grid;
+    gap: 1.5rem;
+    max-width: 54rem;
+    margin-block-start: 1.5rem;
+  }
+
+  .grid {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  }
+
+  .field {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .field > span {
+    font-weight: 600;
+    font-size: var(--step--1);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .field > span i {
+    font-style: normal;
+    font-weight: 400;
+    text-transform: none;
+    color: var(--ink-faint);
+  }
+
+  .field em,
+  .mode em {
+    display: block;
+    font-style: normal;
+    font-size: var(--step--1);
+    line-height: 1.5;
+    color: var(--ink-faint);
+  }
+
+  .field input,
+  .field textarea,
+  .field select {
+    width: 100%;
+    padding: 0.7em 0.9em;
+    background: var(--paper-card);
+    border: 2px solid color-mix(in srgb, var(--ink) 16%, transparent);
+    border-radius: var(--radius-btn);
+    font-size: var(--step-0);
+  }
+
+  .field textarea {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: var(--step--1);
+    line-height: 1.6;
+    resize: vertical;
+  }
+
+  .field input:focus-visible,
+  .field textarea:focus-visible,
+  .field select:focus-visible {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 13%, transparent);
+  }
+
+  .mode {
+    display: grid;
+    gap: 0.75rem;
+    padding: 1.1rem 1.25rem;
+    border: 2px solid color-mix(in srgb, var(--ink) 12%, transparent);
+    border-radius: var(--radius);
+  }
+
+  .mode legend {
+    padding-inline: 0.4rem;
+    font-weight: 600;
+    font-size: var(--step--1);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .mode label {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.7rem;
+    align-items: start;
+    cursor: pointer;
+  }
+
+  .mode input {
+    margin-block-start: 0.3rem;
+    accent-color: var(--blue);
+  }
+
+  .pdf-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .pdf-row input {
+    flex: 1 1 22rem;
+    min-width: 0;
+  }
+
+  .upload {
+    flex: none;
+    cursor: pointer;
+  }
+
+  .upload-state,
+  .json-state {
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .is-bad {
+    color: var(--red-deep);
+  }
+
+  .is-good {
+    color: var(--blue-deep);
+  }
+
+  .form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    align-items: center;
+  }
+
+  .danger {
+    margin-inline-start: auto;
+    border-color: color-mix(in srgb, var(--red) 40%, transparent);
+    color: var(--red-deep);
+  }
+
+  .flash {
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius);
+    font-size: var(--step--1);
+    font-weight: 600;
+    background: var(--blue-wash);
+    color: var(--blue-deep);
+  }
+
+  .flash--error {
+    background: var(--red-wash);
+    color: var(--red-deep);
+  }
+</style>
+
+<script>
+  import { initAdmin } from '../../scripts/admin';
+  initAdmin();
+</script>

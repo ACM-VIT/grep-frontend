@@ -17,6 +17,7 @@ export const v1: Edition = {
   pages: 32,
   pdf: '/editions/grep-v1.pdf',
   cover: 'brick',
+  kind: 'full',
   status: 'published',
   sections: [
     {

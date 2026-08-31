@@ -5,10 +5,14 @@ import SubscribeForm from '../components/SubscribeForm.astro';
 import Wordmark from '../components/Wordmark.astro';
 import Intro from '../components/Intro.astro';
 import ScrollHint from '../components/ScrollHint.astro';
-import { editions, latestEdition, editionTitle, readingMinutes } from '../lib/editions';
+import { loadEditions, editionTitle, readingMinutes } from '../lib/editions';
 import { site } from '../lib/site';
 
-const latest = latestEdition;
+/* Rendered on demand: the edition list comes from the admin service. */
+export const prerender = false;
+
+const editions = await loadEditions();
+const latest = editions[0]!;
 const rest = editions.filter((edition) => edition.slug !== latest.slug);
 const minutes = readingMinutes(latest);
 
@@ -86,7 +90,7 @@ const jsonLd = {
       </div>
 
       <p class="hero-meta" data-reveal style="--reveal-delay:calc(var(--hero-lead) + 240ms)">
-        Latest · {latest.dateline} · {latest.pages} pages · ~{minutes} min
+        Latest · {latest.dateline} · {latest.pages} pages{minutes > 0 && ` · ~${minutes} min`}
       </p>
     </div>
 
@@ -313,7 +317,7 @@ const jsonLd = {
 
   /* The hero owns the whole first screen, so the cue belongs at the foot of
      that screen rather than after the copy. */
-  .hero-scroll {
+  :global(.hero-scroll) {
     position: absolute;
     left: 50%;
     bottom: clamp(1rem, 3vw, 2rem);

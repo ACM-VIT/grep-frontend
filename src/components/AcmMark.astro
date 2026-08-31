@@ -2,23 +2,27 @@
 /**
  * The ACM diamond, taken from the printed editions rather than redrawn.
  *
- * Two versions exist because the newsletter uses two: a white outline stamped
- * on the blue header band, and the metallic mark on the back matter. ACM-W
- * sections get the chapter's own red diamond.
+ * Several versions exist because the newsletter uses several: the stroked line
+ * mark on the running band, the heavier blue outline on the back matter, and
+ * the metallic mark in print. ACM-W sections get the chapter's own red
+ * diamond.
  */
 interface Props {
-  variant?: 'white' | 'metallic' | 'outline' | 'acmw';
+  variant?: 'line' | 'white' | 'metallic' | 'outline' | 'acmw';
   size?: number;
   class?: string;
   label?: string;
 }
 
-const { variant = 'white', size = 34, class: className = '', label } = Astro.props;
+const { variant = 'line', size = 34, class: className = '', label } = Astro.props;
 
 /* Vectors from the chapter's logo system - the old PNG exports were cropped
-   at the diamond's right and bottom points. `outline` is the stroked blue
-   diamond the printed back page opens with. */
+   at the diamond's right and bottom points. `line` is the stroked mark the
+   running band carries; `outline` is the heavier blue one the printed back
+   page opens with; `white` is the solid fill, kept for anywhere that needs a
+   silhouette. */
 const sources = {
+  line: '/logos/acm-line-mark.svg',
   white: '/logos/acm-diamond-white.svg',
   metallic: '/logos/acm-diamond-dark.svg',
   outline: '/logos/acm-diamond-outline.svg',

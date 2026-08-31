@@ -2,7 +2,13 @@
 import Base from '../layouts/Base.astro';
 import ScrollHint from '../components/ScrollHint.astro';
 import SubscribeForm from '../components/SubscribeForm.astro';
-import { editions, latestEdition, editionTitle } from '../lib/editions';
+import { loadEditions, editionTitle } from '../lib/editions';
+
+/* Rendered on demand: the edition list comes from the admin service. */
+export const prerender = false;
+
+const editions = await loadEditions();
+const latestEdition = editions[0]!;
 
 /**
  * `?state=` is set by the no-JS fallback in `/api/subscribe`, which redirects
@@ -10,12 +16,6 @@ import { editions, latestEdition, editionTitle } from '../lib/editions';
  */
 const state = Astro.url.searchParams.get('state');
 
-const promises = [
-  { title: 'One email per edition', body: 'A few times a year, when there is enough worth writing down. Never a drip campaign.' },
-  { title: 'The whole thing', body: 'The full edition, not a teaser with a “read more” wall. Link to the web reader, link to the PDF.' },
-  { title: 'No tracking', body: 'No pixels, no open-rate surveillance, no sharing your address with anyone.' },
-  { title: 'One click out', body: 'Unsubscribe in every email. No confirmation flow designed to change your mind.' },
-];
 ---
 
 <Base
@@ -51,28 +51,6 @@ const promises = [
       <SubscribeForm id="page-subscribe" variant="panel" />
     </div>
 
-    <ul class="promises">
-      {
-        promises.map((item, index) => (
-          <li data-reveal style={`--reveal-delay:${index * 70}ms`}>
-            <svg class="tick" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-              <path
-                d="M3 8.5 6.5 12 13 4.5"
-                stroke="currentColor"
-                stroke-width="2.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                fill="none"
-              />
-            </svg>
-            <div>
-              <h2 class="promise-title">{item.title}</h2>
-              <p class="promise-body">{item.body}</p>
-            </div>
-          </li>
-        ))
-      }
-    </ul>
   </section>
 
   <section class="meanwhile shell">
@@ -92,7 +70,9 @@ const promises = [
 </Base>
 
 <style>
-  .head-scroll {
+  /* `:global` because the cue's root element belongs to ScrollHint, so this
+     page's scoping attribute is never stamped on it. */
+  :global(.head-scroll) {
     margin-block-start: clamp(1.75rem, 5vw, 2.75rem);
   }
 
@@ -138,37 +118,6 @@ const promises = [
   .flash--error {
     background: var(--red-wash);
     color: var(--red-deep);
-  }
-
-  .promises {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
-  }
-
-  .promises li {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.7rem;
-    align-items: start;
-  }
-
-  .tick {
-    margin-block-start: 0.28rem;
-    color: var(--blue);
-  }
-
-  .promise-title {
-    font-size: var(--step-0);
-    font-weight: 600;
-    letter-spacing: -0.015em;
-    margin-block-end: 0.15rem;
-  }
-
-  .promise-body {
-    font-size: var(--step--1);
-    line-height: 1.55;
-    color: var(--ink-soft);
   }
 
   .meanwhile {

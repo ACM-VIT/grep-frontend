@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { editions, editionTitle } from '../lib/editions';
+import { loadEditions, editionTitle } from '../lib/editions';
 import { site } from '../lib/site';
 
 const escape = (value: string) =>
@@ -18,8 +18,12 @@ const escape = (value: string) =>
     }
   });
 
-export const GET: APIRoute = ({ site: configured }) => {
+/* Rendered on demand: the edition list comes from the admin service. */
+export const prerender = false;
+
+export const GET: APIRoute = async ({ site: configured }) => {
   const base = (configured ?? new URL(site.url)).href.replace(/\/$/, '');
+  const editions = await loadEditions();
 
   const items = editions
     .map((edition) => {

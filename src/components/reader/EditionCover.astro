@@ -57,7 +57,7 @@ const keyboard = [
       <ul class="cover-facts">
         <li>{edition.dateline}</li>
         <li>{edition.pages} pages</li>
-        <li>~{minutes} min read</li>
+        {minutes > 0 && <li>~{minutes} min read</li>}
       </ul>
     </div>
 
@@ -186,7 +186,7 @@ const keyboard = [
     gap: 0.7rem;
   }
 
-  .cover-scroll {
+  :global(.cover-scroll) {
     margin-block-start: clamp(2rem, 5vw, 3.5rem);
   }
 

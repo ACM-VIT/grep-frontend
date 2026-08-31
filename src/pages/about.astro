@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import ScrollHint from '../components/ScrollHint.astro';
 import SubscribeForm from '../components/SubscribeForm.astro';
-import { editions, latestEdition } from '../lib/editions';
+import { loadEditions } from '../lib/editions';
 import { site, socials } from '../lib/site';
 import { linkTarget } from '../lib/links';
 
@@ -10,6 +10,12 @@ import { linkTarget } from '../lib/links';
  * About grep. The copy is drawn from the editions' own "What is grep?" and
  * "What is ACM-VIT?" pages rather than invented.
  */
+
+/* Rendered on demand: the edition list comes from the admin service. */
+export const prerender = false;
+
+const editions = await loadEditions();
+const latestEdition = editions[0]!;
 const sections = [
   {
     id: 'what-is-grep',
@@ -161,7 +167,9 @@ const process = [
 </Base>
 
 <style>
-  .head-scroll {
+  /* `:global` because the cue's root element belongs to ScrollHint, so this
+     page's scoping attribute is never stamped on it. */
+  :global(.head-scroll) {
     margin-block-start: clamp(1.75rem, 5vw, 2.75rem);
   }
 

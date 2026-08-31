@@ -3,22 +3,28 @@ import Base from '../../layouts/Base.astro';
 import EditionCover from '../../components/reader/EditionCover.astro';
 import ReaderRail from '../../components/reader/ReaderRail.astro';
 import Blocks from '../../components/blocks/Blocks.astro';
-import { editions, editionTitle, neighbours, readingMinutes } from '../../lib/editions';
+import { loadEditions, getEdition, editionTitle, neighbours, readingMinutes } from '../../lib/editions';
 import { artSrc, fallbackArt } from '../../lib/art';
 import { site } from '../../lib/site';
 import fs from 'node:fs';
 import path from 'node:path';
 
-export function getStaticPaths() {
-  return editions.map((edition) => ({ params: { slug: edition.slug }, props: { edition } }));
+/* Rendered on demand so an edition published through the admin is readable the
+   moment it is published, without a rebuild. */
+export const prerender = false;
+
+const editions = await loadEditions();
+const edition = getEdition(editions, Astro.params.slug!);
+
+if (!edition) {
+  return new Response(null, { status: 404, statusText: 'No such edition' });
 }
 
-const { edition } = Astro.props;
-const { previous, next } = neighbours(edition.slug);
+const { previous, next } = neighbours(editions, edition.slug);
 const minutes = readingMinutes(edition);
 
-// Which members actually have a portrait extracted from the printed editions.
-// Resolved at build time so the team grid never renders a broken image.
+// Which members actually have a portrait extracted from the printed editions,
+// so the team grid never renders a broken image.
 const peopleDir = path.join(process.cwd(), 'public', 'people');
 const portraits = fs.existsSync(peopleDir)
   ? fs.readdirSync(peopleDir).map((file) => file.replace(/\.(jpe?g|png|webp)$/i, ''))
@@ -53,10 +59,25 @@ const jsonLd = {
 
   <EditionCover edition={edition} />
 
-  <div class="reader shell-wide" id="reader-start">
-    <ReaderRail edition={edition} />
+  <div class:list={['reader shell-wide', edition.kind === 'pdf' && 'reader--pdf']} id="reader-start">
+    {edition.kind === 'full' && <ReaderRail edition={edition} />}
 
     <article class="reader-article" data-reader-article>
+      {
+        edition.kind === 'pdf' && (
+          <section class="chapter pdf-only">
+            <h2 class="chapter-title script">Read the edition</h2>
+            <p class="pdf-only-body">
+              This edition is published as the printed PDF. Open it in your browser or take a copy.
+            </p>
+            <div class="pdf-only-actions">
+              <a class="btn" href={edition.pdf} target="_blank" rel="noopener noreferrer">Open the PDF</a>
+              <a class="btn btn--quiet" href={edition.pdf} download>Download</a>
+            </div>
+          </section>
+        )
+      }
+
       {
         edition.sections.map((section, index) => {
           const accent = section.accent ?? 'blue';
@@ -81,7 +102,7 @@ const jsonLd = {
       <footer class="reader-end">
         <p class="reader-end-mark pixel">end of {editionTitle(edition).toLowerCase()}</p>
         <p class="reader-end-meta">
-          {edition.footerLabel} · ~{minutes} min read
+          {edition.footerLabel}{minutes > 0 && ` · ~${minutes} min read`}
         </p>
 
         <nav class="reader-nav" aria-label="Other editions">
@@ -145,6 +166,32 @@ const jsonLd = {
     .reader {
       grid-template-columns: 17.5rem minmax(0, 1fr);
     }
+
+    /* A pdf edition has no contents to rail, so the article takes the page. */
+    .reader--pdf {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .reader--pdf .reader-article {
+    justify-self: center;
+  }
+
+  .pdf-only-body {
+    max-width: 46ch;
+    margin-block: 0.75rem 1.5rem;
+    color: var(--ink-soft);
+  }
+
+  .pdf-only-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+
+  .pdf-only-actions .btn {
+    --accent: var(--blue);
+    --accent-contrast: #fff;
   }
 
   .reader-article {

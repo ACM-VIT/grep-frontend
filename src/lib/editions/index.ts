@@ -1,25 +1,49 @@
 import type { Block, Edition, Section } from '../types';
 import { slugify } from '../types';
+import { remoteEditions } from './remote';
 import { v0 } from './v0';
 import { v1 } from './v1';
 
-/** Newest first - the archive, the home page and the reader all read in this order. */
-export const editions: Edition[] = [v1, v0].sort((a, b) => b.number - a.number);
+/**
+ * The two hand-set editions, compiled in. They are the floor: whatever the
+ * admin service says or fails to say, these render.
+ */
+export const builtinEditions: Edition[] = [v1, v0];
 
-export const latestEdition = editions[0]!;
+/**
+ * Every edition the site should show, newest first - the archive, the home page
+ * and the reader all read in this order.
+ *
+ * Built-ins are merged with whatever the admin service has published. A remote
+ * edition sharing a slug with a built-in wins, so a hand-set edition can be
+ * corrected through the admin without a deploy; anything else is added.
+ */
+export async function loadEditions(): Promise<Edition[]> {
+  const remote = await remoteEditions();
+  const bySlug = new Map<string, Edition>();
+  for (const edition of builtinEditions) bySlug.set(edition.slug, edition);
+  for (const edition of remote) bySlug.set(edition.slug, edition);
+  return [...bySlug.values()].sort((a, b) => b.number - a.number);
+}
 
-export function getEdition(slug: string): Edition | undefined {
-  return editions.find((edition) => edition.slug === slug);
+/** The newest edition. Never undefined - there are always the built-ins. */
+export async function loadLatestEdition(): Promise<Edition> {
+  const list = await loadEditions();
+  return list[0]!;
+}
+
+export function getEdition(list: Edition[], slug: string): Edition | undefined {
+  return list.find((edition) => edition.slug === slug);
 }
 
 export function editionTitle(edition: Edition): string {
   return edition.name ? `grep v${edition.number} - ${edition.name}` : `grep v${edition.number}`;
 }
 
-export function neighbours(slug: string): { previous?: Edition; next?: Edition } {
-  const index = editions.findIndex((edition) => edition.slug === slug);
+export function neighbours(list: Edition[], slug: string): { previous?: Edition; next?: Edition } {
+  const index = list.findIndex((edition) => edition.slug === slug);
   if (index === -1) return {};
-  return { next: editions[index - 1], previous: editions[index + 1] };
+  return { next: list[index - 1], previous: list[index + 1] };
 }
 
 /** Section headings, in print order, for the table of contents and the reader rail. */
@@ -90,7 +114,15 @@ export function sectionText(section: Section): string {
 
 const WORDS_PER_MINUTE = 220;
 
+/**
+ * Minutes of reading, or 0 for a pdf-only edition.
+ *
+ * Zero rather than a floor of one: an edition with no sections has nothing to
+ * read here, and "~1 min" beside a download link is a claim about a page that
+ * does not exist. Callers hide the figure when it is 0.
+ */
 export function readingMinutes(edition: Edition): number {
+  if (edition.sections.length === 0) return 0;
   const words = edition.sections
     .map(sectionText)
     .join(' ')
@@ -112,9 +144,9 @@ export interface SearchRecord {
   text: string;
 }
 
-export function buildSearchIndex(): SearchRecord[] {
+export function buildSearchIndex(list: Edition[]): SearchRecord[] {
   const records: SearchRecord[] = [];
-  for (const edition of editions) {
+  for (const edition of list) {
     for (const section of edition.sections) {
       const title = section.navTitle ?? section.title;
       for (const block of section.blocks) {

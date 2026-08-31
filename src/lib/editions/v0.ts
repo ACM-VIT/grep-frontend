@@ -18,6 +18,7 @@ export const v0: Edition = {
   pages: 20,
   pdf: '/editions/grep-v0-origins-edition.pdf',
   cover: 'keyboard',
+  kind: 'full',
   status: 'published',
   sections: [
     {

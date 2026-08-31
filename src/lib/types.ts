@@ -122,7 +122,14 @@ export interface Edition {
   pages: number;
   pdf: string;
   cover: 'keyboard' | 'brick';
+  /**
+   * `pdf` editions carry a cover and a download and nothing else - the admin
+   * lets an editor publish one without transcribing the whole issue. `full`
+   * editions also carry sections and get the reader.
+   */
+  kind: 'pdf' | 'full';
   status: 'published';
+  /** Empty for a `pdf` edition. */
   sections: Section[];
 }
 

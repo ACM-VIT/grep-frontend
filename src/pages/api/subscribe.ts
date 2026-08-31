@@ -13,6 +13,12 @@ import type { APIRoute } from 'astro';
  *   BUTTONDOWN_API_KEY           - Buttondown's subscribers endpoint.
  *
  * Both honour SUBSCRIBE_WEBHOOK_SECRET as a bearer token when present.
+ *
+ * Separately, and regardless of which of those is set, the address is also
+ * copied to `grep-backend` when GREP_API_URL is configured, so the admin has a
+ * list to read. That copy is best-effort: the mailing-list provider is what
+ * actually matters to the reader, so a backend that is down must not turn a
+ * successful subscription into an error.
  */
 
 export const prerender = false;
@@ -89,6 +95,26 @@ async function forward(email: string, source: string): Promise<{ ok: boolean; me
   return { ok: true };
 }
 
+/** Copy the address to the admin service. Never throws; never blocks the reply. */
+async function mirrorToAdmin(email: string, source: string): Promise<void> {
+  const base = (import.meta.env.GREP_API_URL ?? '').toString().replace(/\/+$/, '');
+  if (!base) return;
+
+  try {
+    const abort = new AbortController();
+    const timer = setTimeout(() => abort.abort(), 3000);
+    await fetch(`${base}/v1/subscribe`, {
+      method: 'POST',
+      signal: abort.signal,
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email, source, ts: new Date().toISOString() }),
+    });
+    clearTimeout(timer);
+  } catch (error) {
+    console.warn('[subscribe] could not mirror to the admin service:', (error as Error).message);
+  }
+}
+
 export const POST: APIRoute = async ({ request, clientAddress }) => {
   const wantsJson = (request.headers.get('accept') ?? '').includes('application/json');
 
@@ -130,6 +156,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   try {
     const result = await forward(email, 'grep-website');
     if (!result.ok) return respond(502, 'Our mailing list is having a moment. Try again shortly.');
+    await mirrorToAdmin(email, 'grep-website');
     return respond(200, result.message ?? 'You’re on the list. See you next edition.');
   } catch (error) {
     console.error('[subscribe] provider call failed', error);

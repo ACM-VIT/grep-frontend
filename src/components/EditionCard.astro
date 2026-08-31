@@ -43,7 +43,7 @@ const highlights = toc.slice(0, featured ? 6 : 4);
     </ul>
 
     <div class="edition-foot">
-      <p class="edition-facts">{edition.pages} pages · ~{minutes} min</p>
+      <p class="edition-facts">{edition.pages} pages{minutes > 0 && ` · ~${minutes} min`}</p>
       <div class="edition-actions">
         <a class="btn btn--sm btn--ghost" href={`/read/${edition.slug}`}>Read online</a>
         <a class="edition-pdf" href={edition.pdf} download>PDF</a>
