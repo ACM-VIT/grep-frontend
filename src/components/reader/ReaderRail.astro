@@ -41,11 +41,11 @@ const toc = tableOfContents(edition);
     </nav>
 
     <a class="rail-pdf" href={edition.pdf} download>
-      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
         <path
-          d="M8 2v8m0 0L5 7m3 3 3-3M3 13h10"
+          d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16"
           stroke="currentColor"
-          stroke-width="1.8"
+          stroke-width="1.75"
           stroke-linecap="round"
           stroke-linejoin="round"
           fill="none"></path>
@@ -56,8 +56,8 @@ const toc = tableOfContents(edition);
 </aside>
 
 <button class="rail-trigger no-print" type="button" data-rail-open>
-  <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
-    <path d="M2 4h12M2 8h12M2 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+    <path d="M3 6h18M3 12h18M3 18h12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"></path>
   </svg>
   Contents
 </button>
@@ -82,24 +82,24 @@ const toc = tableOfContents(edition);
 
   .rail-close {
     display: none;
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     place-items: center;
     font-size: var(--step-2);
     line-height: 1;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     color: var(--ink-soft);
   }
 
   .rail-list {
     display: grid;
-    gap: 0.1rem;
+    gap: 4px;
     /* Long editions must not push the download link off-screen. */
     max-height: min(60vh, 34rem);
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
-    padding-inline-end: 0.25rem;
+    padding-inline-end: 4px;
   }
 
   .rail-link {
@@ -107,13 +107,13 @@ const toc = tableOfContents(edition);
     grid-template-columns: 1.9rem minmax(0, 1fr);
     gap: 0.4rem;
     align-items: baseline;
-    padding: 0.42rem 0.55rem;
-    border-radius: 8px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
     font-size: var(--step--1);
     line-height: 1.35;
     text-decoration: none;
     color: var(--ink-faint);
-    transition: background-color 0.18s var(--ease-out), color 0.18s var(--ease-out);
+    transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
   }
 
   .rail-link:hover {
@@ -145,8 +145,8 @@ const toc = tableOfContents(edition);
   .rail-pdf {
     display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
-    padding-block-start: 0.9rem;
+    gap: 8px;
+    padding-block-start: 16px;
     border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
     font-size: var(--step--1);
     font-weight: 600;
@@ -156,7 +156,7 @@ const toc = tableOfContents(edition);
 
   .rail-pdf:hover {
     text-decoration: underline;
-    text-underline-offset: 3px;
+    text-underline-offset: 4px;
   }
 
   /* The floating trigger only exists below the two-column breakpoint. */
@@ -164,12 +164,12 @@ const toc = tableOfContents(edition);
     display: none;
     position: fixed;
     left: 50%;
-    bottom: 1.15rem;
+    bottom: 24px;
     z-index: 70;
     transform: translateX(-50%);
     align-items: center;
-    gap: 0.45rem;
-    padding: 0.62em 1.15em;
+    gap: 8px;
+    padding: 8px 16px;
     border-radius: var(--radius-btn);
     background: var(--blue);
     color: #fff;
@@ -199,11 +199,16 @@ const toc = tableOfContents(edition);
       width: min(21rem, 88vw);
       /* The wave is cut out of the leading edge, so the copy is padded clear
          of the deepest trough rather than of the box. */
-      padding: 1.25rem 1.25rem 1.25rem calc(1.25rem + var(--wave-height));
+      padding: 24px 24px 24px calc(24px + var(--wave-height));
       background: var(--blue);
       transform: translateX(100%);
-      transition: transform 0.34s var(--ease-out);
-      overflow-y: auto;
+      transition: transform var(--dur-gentle) var(--ease-out);
+      /* The sheet itself must not scroll: its mask and its ::before fill are
+         painted against the box, so scrolling the box slides the paper out
+         from under the wave and leaves bare blue. The list scrolls instead. */
+      display: grid;
+      grid-template-rows: minmax(0, 1fr);
+      overflow: hidden;
       /* A mask does not clip a box-shadow, so the shadow would have drawn a
          straight edge outside the wavy one. The blue rule carries the edge. */
       box-shadow: none;
@@ -217,7 +222,7 @@ const toc = tableOfContents(edition);
     .reader-rail::before {
       content: '';
       position: absolute;
-      inset: 0 0 0 2.5px;
+      inset: 0 0 0 2px;
       background: var(--paper-card);
       -webkit-mask-image: linear-gradient(#000 0 0), var(--wave-tile);
       mask-image: linear-gradient(#000 0 0), var(--wave-tile);
@@ -232,6 +237,9 @@ const toc = tableOfContents(edition);
     .rail-inner {
       position: relative;
       z-index: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
     }
 
     .reader-rail[data-open] {

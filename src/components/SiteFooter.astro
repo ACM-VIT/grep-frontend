@@ -102,13 +102,13 @@ const year = new Date().getFullYear();
   .back-id {
     display: grid;
     justify-items: center;
-    gap: 1.5rem;
+    gap: 24px;
     color: var(--blue);
   }
 
   .back-mark {
     display: inline-flex;
-    transition: transform 0.3s var(--ease-spring);
+    transition: transform var(--dur-fast) var(--ease-spring);
   }
 
   .back-mark:hover {
@@ -117,7 +117,7 @@ const year = new Date().getFullYear();
 
   .back-org {
     display: grid;
-    gap: 0.15rem;
+    gap: 4px;
     color: var(--blue);
   }
 
@@ -157,14 +157,14 @@ const year = new Date().getFullYear();
   .back-link {
     display: grid;
     justify-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     color: var(--blue);
     text-decoration: none;
-    transition: transform 0.24s var(--ease-spring);
+    transition: transform var(--dur-fast) var(--ease-spring);
   }
 
   .back-link:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px);
   }
 
   /* The icons are two-colour artwork - blue ink with the paper knocked out of
@@ -181,7 +181,7 @@ const year = new Date().getFullYear();
     text-decoration-thickness: 0.05em;
     text-underline-offset: 0.14em;
     text-decoration-color: color-mix(in srgb, var(--blue) 45%, transparent);
-    transition: text-decoration-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
+    transition: text-decoration-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
   }
 
   .back-link:hover .back-link-label {
@@ -228,7 +228,7 @@ const year = new Date().getFullYear();
   .endcard-keys :global(rect) {
     fill: color-mix(in srgb, #fff 5%, transparent) !important;
     pointer-events: auto;
-    transition: fill 0.15s var(--ease-out);
+    transition: fill var(--dur-fast) var(--ease-out);
   }
 
   .endcard-keys :global(rect:hover) {
@@ -238,7 +238,7 @@ const year = new Date().getFullYear();
   .endcard-keys :global(path) {
     fill: color-mix(in srgb, #fff 6%, transparent) !important;
     pointer-events: none;
-    transition: fill 0.15s var(--ease-out);
+    transition: fill var(--dur-fast) var(--ease-out);
   }
 
   /* The two paths after a key are its letter - recolour only those, or every
@@ -248,7 +248,7 @@ const year = new Date().getFullYear();
     fill: color-mix(in srgb, #fff 55%, transparent) !important;
   }
 
-  @media (min-width: 60rem) {
+  @media (min-width: 64rem) {
     .endcard-keys :global(svg) {
       width: 100%;
     }
@@ -265,7 +265,7 @@ const year = new Date().getFullYear();
     position: relative;
     display: grid;
     justify-items: center;
-    gap: 1.4rem;
+    gap: 24px;
   }
 
   .endcard-mark {
@@ -279,21 +279,32 @@ const year = new Date().getFullYear();
 
   .endcard-meta {
     display: grid;
-    gap: 0.5rem;
+    gap: 8px;
     justify-items: center;
     margin-block-start: clamp(1rem, 4vw, 2.5rem);
   }
 
+  /* The heart is set on the script's own baseline and cut to its cap height
+     (0.72em - see the type scale), so it fills exactly the band the capitals
+     do at every size. Centring it on the line box instead sat it low: Borel's
+     glyph box is a full 2em tall, so the box's middle is nowhere near the
+     middle of the letters. */
   .endcard-craft {
     display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
+    align-items: baseline;
+    gap: 8px;
+    font-size: var(--step-script);
   }
 
+  /* The art fills 88 of the file's 97px of height, with the rest transparent
+     padding, so the box runs a little taller than the cap band and drops a
+     little below the baseline. Both are corrected here rather than in the
+     asset, and both scale with the type because they are in em. */
   .heart {
-    width: 22px;
-    height: auto;
-    /* The mark is lifted from the blue end card, so it is already white. */
+    width: auto;
+    height: 0.8em;
+    margin-block-end: -0.04em;
+    /* A bitmap mark - it has to stay hard-edged at every size. */
     image-rendering: crisp-edges;
   }
 

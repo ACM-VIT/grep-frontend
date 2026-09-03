@@ -87,12 +87,12 @@
     fill: color-mix(in srgb, var(--ink) 5%, transparent) !important;
     transform-box: fill-box;
     transform-origin: center;
-    transition: fill 0.18s var(--ease-out), transform 0.18s var(--ease-out);
+    transition: fill var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
   }
 
   .intro-keys :global(path) {
     fill: color-mix(in srgb, var(--ink) 6%, transparent) !important;
-    transition: fill 0.18s var(--ease-out);
+    transition: fill var(--dur-fast) var(--ease-out);
   }
 
   /* A struck key: the cap dips and takes the accent, its letter comes up with it. */
@@ -134,7 +134,7 @@
   .intro-mark span[data-key].is-typed {
     opacity: 1;
     transform: none;
-    transition: opacity 0.16s var(--ease-out), transform 0.26s var(--ease-spring);
+    transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-spring);
   }
 
   @media (prefers-reduced-motion: reduce) {

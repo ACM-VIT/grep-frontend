@@ -142,7 +142,7 @@ const jsonLd = {
     inset-inline: 0;
     top: 0;
     z-index: 80;
-    height: 3px;
+    height: 4px;
     background: color-mix(in srgb, var(--ink) 8%, transparent);
   }
 
@@ -229,7 +229,7 @@ const jsonLd = {
     margin-block-start: 0.45rem;
   }
 
-  @media (min-width: 72rem) {
+  @media (min-width: 80rem) {
     .chapter-index {
       position: absolute;
       right: calc(100% + 1.1rem);
@@ -251,7 +251,7 @@ const jsonLd = {
     opacity: 0.92;
   }
 
-  @media (max-width: 34rem) {
+  @media (max-width: 39.99rem) {
     .chapter-art {
       display: none;
     }
@@ -262,7 +262,7 @@ const jsonLd = {
     display: grid;
     gap: 1rem;
     padding-block-start: clamp(2rem, 5vw, 3rem);
-    border-top: 2.5px solid color-mix(in srgb, var(--blue) 30%, transparent);
+    border-top: 2px solid color-mix(in srgb, var(--blue) 30%, transparent);
   }
 
   .reader-end-mark {
@@ -286,11 +286,11 @@ const jsonLd = {
     display: grid;
     gap: 0.3rem;
     padding: 1rem 1.2rem;
-    border: 2.5px solid color-mix(in srgb, var(--blue) 26%, transparent);
+    border: 2px solid color-mix(in srgb, var(--blue) 26%, transparent);
     border-radius: var(--radius);
     text-decoration: none;
     color: var(--ink);
-    transition: border-color 0.24s var(--ease-out), transform 0.24s var(--ease-out);
+    transition: border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
   }
 
   .reader-nav-card:hover {
