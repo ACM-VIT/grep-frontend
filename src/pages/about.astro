@@ -85,8 +85,9 @@ const process = [
   <section class="head shell">
     <h1 class="head-title script" data-reveal style="--reveal-delay:60ms">Because technology matters</h1>
     <p class="head-lede" data-reveal style="--reveal-delay:120ms">
-      grep is how ACM-VIT keeps a record of itself - what we built, what we ran, and who did it. {editions.length}
-      editions so far, published from VIT Vellore.
+      grep is how ACM-VIT keeps a record of itself - what we built, what we ran, and who did it. {
+        editions.length
+      } editions so far, published from VIT Vellore.
     </p>
 
     <ScrollHint align="start" class="head-scroll" />
@@ -213,11 +214,11 @@ const process = [
 
   .chunk-art {
     flex: none;
-    width: clamp(70px, 14vw, 120px);
+    width: clamp(72px, 14vw, 120px);
     height: auto;
   }
 
-  @media (max-width: 34rem) {
+  @media (max-width: 39.99rem) {
     .chunk-art {
       display: none;
     }
@@ -278,7 +279,7 @@ const process = [
   .social {
     color: var(--blue);
     text-decoration: none;
-    transition: transform 0.24s var(--ease-spring), color 0.2s var(--ease-out);
+    transition: transform var(--dur-fast) var(--ease-spring), color var(--dur-fast) var(--ease-out);
     display: inline-block;
   }
 
@@ -301,7 +302,7 @@ const process = [
     align-items: center;
   }
 
-  @media (min-width: 52rem) {
+  @media (min-width: 64rem) {
     .cta-inner {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }

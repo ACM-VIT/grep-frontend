@@ -55,7 +55,7 @@ const display = (href: string) => href.replace(/^https?:\/\//, '').replace(/\/$/
     text-decoration: none;
     color: inherit;
     overflow: hidden;
-    transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+    transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
   }
 
   .blog:hover {
@@ -75,7 +75,7 @@ const display = (href: string) => href.replace(/^https?:\/\//, '').replace(/\/$/
     font-weight: 600;
     line-height: 1.22;
     letter-spacing: -0.015em;
-    transition: color 0.2s var(--ease-out);
+    transition: color var(--dur-fast) var(--ease-out);
   }
 
   .blog:hover .blog-title {
@@ -96,7 +96,7 @@ const display = (href: string) => href.replace(/^https?:\/\//, '').replace(/\/$/
   .blog-url {
     margin-block-start: auto;
     padding-block-start: 0.75rem;
-    border-top: 1.5px solid color-mix(in srgb, var(--accent) 34%, transparent);
+    border-top: 2px solid color-mix(in srgb, var(--accent) 34%, transparent);
     color: var(--accent-deep);
     font-size: var(--step--1);
     word-break: break-all;
@@ -108,7 +108,7 @@ const display = (href: string) => href.replace(/^https?:\/\//, '').replace(/\/$/
     display: grid;
     place-items: center;
     padding: 0.75rem 0.15rem;
-    border-left: 1.5px solid color-mix(in srgb, var(--accent) 34%, transparent);
+    border-left: 2px solid color-mix(in srgb, var(--accent) 34%, transparent);
     background: color-mix(in srgb, var(--accent) 5%, transparent);
   }
 

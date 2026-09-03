@@ -54,11 +54,11 @@ const { items, section } = Astro.props;
               <li>
                 <a class="project-link" href={link.href} {...linkTarget(link.href)}>
                   <span>{link.label}</span>
-                  <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
                     <path
-                      d="M4 12L12 4M12 4H6M12 4v6"
+                      d="M6 18 18 6M18 6H9M18 6v9"
                       stroke="currentColor"
-                      stroke-width="2"
+                      stroke-width="1.75"
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       fill="none"
@@ -82,7 +82,7 @@ const { items, section } = Astro.props;
 
   .project-card {
     scroll-margin-top: 6rem;
-    transition: transform 0.32s var(--ease-out), box-shadow 0.32s var(--ease-out);
+    transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
   }
 
   .project-card:hover {
@@ -115,7 +115,7 @@ const { items, section } = Astro.props;
     flex: none;
     display: grid;
     place-items: center;
-    width: clamp(64px, 12vw, 92px);
+    width: clamp(64px, 12vw, 96px);
     aspect-ratio: 1;
     padding: 0.35rem;
     border-radius: 14px;
@@ -163,7 +163,7 @@ const { items, section } = Astro.props;
     font-weight: 600;
     text-decoration: none;
     color: var(--accent-deep);
-    transition: background-color 0.2s var(--ease-out), border-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
+    transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
   }
 
   .project-link:hover {
@@ -174,7 +174,7 @@ const { items, section } = Astro.props;
 
   .project-link svg {
     flex: none;
-    transition: transform 0.24s var(--ease-spring);
+    transition: transform var(--dur-fast) var(--ease-spring);
   }
 
   .project-link:hover svg {

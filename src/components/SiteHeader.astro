@@ -102,16 +102,16 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    gap: 1rem;
+    gap: 16px;
     min-height: 96px;
-    padding-block: 0.5rem;
+    padding-block: 8px;
   }
 
   .band-home {
     justify-self: start;
     display: inline-flex;
     color: #fff;
-    transition: transform 0.3s var(--ease-spring);
+    transition: transform var(--dur-fast) var(--ease-spring);
   }
 
   .band-home:hover {
@@ -138,30 +138,42 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
     gap: clamp(0.4rem, 2vw, 1.4rem);
   }
 
+  /* Sized off `.btn--sm`, the Subscribe button beside it: same padding, same
+     2px rule, same type - so the three sit on one optical line and the hover
+     state is the button's box rather than a shape of its own. The border is
+     transparent until then, so nothing shifts when it appears. */
   .band-link {
     position: relative;
-    display: inline-block;
-    padding: 0.35rem 0.15rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border: 2px solid transparent;
     font-size: var(--step--1);
     font-weight: 600;
     letter-spacing: -0.01em;
     text-decoration: none;
     color: color-mix(in srgb, #fff 82%, transparent);
-    transition: color 0.2s var(--ease-out);
+    transition: color var(--dur-fast) var(--ease-out);
   }
 
+  /* The frame is a bitmap box, not a rounded one: four rails that stop short
+     of the corners, and a 2px block set diagonally into each corner to make
+     the step. Whole pixels throughout, so the staircase stays crisp. */
   .band-link::after {
     content: '';
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 2px;
-    background: #fff;
-    border-radius: 2px;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.28s var(--ease-out);
+    inset: -2px;
+    opacity: 0;
+    background-image: linear-gradient(#fff, #fff), linear-gradient(#fff, #fff), linear-gradient(#fff, #fff),
+      linear-gradient(#fff, #fff), linear-gradient(#fff, #fff), linear-gradient(#fff, #fff),
+      linear-gradient(#fff, #fff), linear-gradient(#fff, #fff);
+    background-size: calc(100% - 8px) 2px, calc(100% - 8px) 2px, 2px calc(100% - 8px), 2px calc(100% - 8px), 2px 2px,
+      2px 2px, 2px 2px, 2px 2px;
+    background-position: 4px 0, 4px 100%, 0 4px, 100% 4px, 2px 2px, calc(100% - 2px) 2px, 2px calc(100% - 2px),
+      calc(100% - 2px) calc(100% - 2px);
+    background-repeat: no-repeat;
+    transition: opacity var(--dur-fast) steps(1, end);
   }
 
   .band-link:hover,
@@ -171,7 +183,7 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
 
   .band-link:hover::after,
   .band-link.is-active::after {
-    transform: scaleX(1);
+    opacity: 1;
   }
 
   /* Inverted against the band: paper fill, band colour for the label. */
@@ -200,13 +212,13 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
   .bar-toggle {
     display: none;
     justify-self: end;
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     place-items: center;
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
     border: 2px solid color-mix(in srgb, #fff 55%, transparent);
     color: #fff;
-    transition: border-color 0.2s var(--ease-out), background-color 0.2s var(--ease-out);
+    transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
   }
 
   .bar-toggle:hover,
@@ -217,39 +229,39 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
 
   .bar-toggle-bars {
     display: grid;
-    gap: 5px;
-    width: 18px;
+    gap: 4px;
+    width: 16px;
   }
 
   .bar-toggle-bars i {
     display: block;
-    height: 2.5px;
+    height: 2px;
     background: currentColor;
     border-radius: 2px;
-    transition: transform 0.28s var(--ease-out), opacity 0.2s var(--ease-out);
+    transition: transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
   }
 
   .bar-toggle[aria-expanded='true'] .bar-toggle-bars i:first-child {
-    transform: translateY(3.75px) rotate(45deg);
+    transform: translateY(3px) rotate(45deg);
   }
 
   .bar-toggle[aria-expanded='true'] .bar-toggle-bars i:last-child {
-    transform: translateY(-3.75px) rotate(-45deg);
+    transform: translateY(-3px) rotate(-45deg);
   }
 
   .bar-menu {
     border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
-    padding: 0.5rem var(--gutter) 1rem;
+    padding: 8px var(--gutter) 16px;
   }
 
   .bar-menu ul {
     display: grid;
-    gap: 0.15rem;
+    gap: 4px;
   }
 
   .bar-menu a {
     display: block;
-    padding: 0.75rem 0.25rem;
+    padding: 12px 4px;
     font-size: var(--step-1);
     font-weight: 600;
     text-decoration: none;
@@ -261,9 +273,10 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
     color: var(--blue);
   }
 
-  /* Below this the band cannot hold the links legibly, so they fold into the
-     compact menu, and the bar that carries it comes in with them. */
-  @media (max-width: 46rem) {
+  /* Navigation chrome flips at 1024 - the chapter's one breakpoint for it -
+     so the links fold into the compact menu below that, and the bar that
+     carries it comes in with them. */
+  @media (max-width: 63.99rem) {
     .band-nav {
       display: none;
     }

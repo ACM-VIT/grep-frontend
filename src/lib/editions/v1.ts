@@ -322,7 +322,7 @@ export const v1: Edition = {
               links: [
                 {
                   label: 'NCSAM - When AI Meets Cybersecurity | Codex Cryptum 2025',
-                  href: 'https://www.youtube.com/@acmvit',
+                  href: 'https://www.youtube.com/@acm_vit',
                 },
               ],
             },
@@ -343,7 +343,7 @@ export const v1: Edition = {
               links: [
                 {
                   label: '“Computers Have Feelings Too” | Dr. Peter Robinson | DSP May 2025',
-                  href: 'https://www.youtube.com/@acmvit',
+                  href: 'https://www.youtube.com/@acm_vit',
                 },
               ],
             },
@@ -490,7 +490,7 @@ export const v1: Edition = {
                 'Introduced the core building blocks of the web-HTML and CSS-focusing on semantic structure, styling, and key concepts like the DOM and box model. Participants also explored Flexbox, Grid, and responsive design to build a fully responsive webpage.',
               ],
               links: [
-                { label: 'Introduction to HTML and CSS | Web Unwebbed #1', href: 'https://www.youtube.com/@acmvit' },
+                { label: 'Introduction to HTML and CSS | Web Unwebbed #1', href: 'https://www.youtube.com/@acm_vit' },
               ],
             },
             {
@@ -500,7 +500,7 @@ export const v1: Edition = {
                 'Covered JavaScript fundamentals including variables, functions, and objects, followed by DOM manipulation and event handling. Participants learned to create dynamic web experiences and work with browser and third-party APIs.',
               ],
               links: [
-                { label: 'Introduction to JavaScript | Web Unwebbed #2', href: 'https://www.youtube.com/@acmvit' },
+                { label: 'Introduction to JavaScript | Web Unwebbed #2', href: 'https://www.youtube.com/@acm_vit' },
               ],
             },
             {
@@ -512,7 +512,7 @@ export const v1: Edition = {
               links: [
                 {
                   label: 'Introduction to Backend Development | Web Unwebbed #3',
-                  href: 'https://www.youtube.com/@acmvit',
+                  href: 'https://www.youtube.com/@acm_vit',
                 },
               ],
             },
@@ -522,7 +522,7 @@ export const v1: Edition = {
               body: [
                 'Explored MVC architecture and structured backend development using Express.js. Covered database fundamentals, SQL vs NoSQL, and hands-on integration with Prisma and PostgreSQL, along with security concepts like SQL injection.',
               ],
-              links: [{ label: 'MVC Model & Databases | Web Unwebbed #4', href: 'https://www.youtube.com/@acmvit' }],
+              links: [{ label: 'MVC Model & Databases | Web Unwebbed #4', href: 'https://www.youtube.com/@acm_vit' }],
             },
           ],
         },

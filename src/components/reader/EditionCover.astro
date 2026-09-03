@@ -7,9 +7,8 @@ import { editionTitle, readingMinutes } from '../../lib/editions';
 /**
  * The edition cover, rebuilt rather than screenshotted.
  *
- * v0 prints over a faint keyboard; v1 over a brick grid. Both are drawn in
- * CSS - the keyboard keys are real elements so they can catch light on hover,
- * and neither costs a network request.
+ * The cover is type on plain paper - no backdrop pattern, so the wordmark
+ * never has to fight for contrast, and it costs no network request.
  */
 interface Props {
   edition: Edition;
@@ -17,33 +16,9 @@ interface Props {
 
 const { edition } = Astro.props;
 const minutes = readingMinutes(edition);
-
-// The printed v0 cover: three staggered rows of keycaps with a few keys lit.
-const keyboard = [
-  { keys: ['$4', '%5', '^6', '&7', '*8', '(9', ')0', '-'], offset: 0, lit: [] as number[] },
-  { keys: ['e', 'r', 't', 'y', 'u', 'i', 'o', 'p'], offset: 2.4, lit: [0, 1, 7] },
-  { keys: ['d', 'f', 'g', 'h', 'j', 'k', 'l', ':;'], offset: 4.6, lit: [2] },
-  { keys: ['x', 'c', 'v', 'b', 'n', 'm', '<,', '>.'], offset: 1.2, lit: [] as number[] },
-];
 ---
 
 <header class:list={['cover', `cover--${edition.cover}`]}>
-  <div class="cover-art" aria-hidden="true">
-    {
-      edition.cover === 'keyboard' && (
-        <div class="keys">
-          {keyboard.map((row) => (
-            <div class="keys-row" style={`--row-offset:${row.offset}%`}>
-              {row.keys.map((key, index) => (
-                <span class:list={['key', row.lit.includes(index) && 'key--lit']}>{key}</span>
-              ))}
-            </div>
-          ))}
-        </div>
-      )
-    }
-  </div>
-
   <div class="cover-inner shell">
     <div class="cover-mark">
       <Wordmark stacked size="clamp(3.5rem, 15vw, 9rem)" />
@@ -77,51 +52,6 @@ const keyboard = [
     padding-block: clamp(3rem, 9vw, 6.5rem) clamp(3.5rem, 10vw, 7rem);
     background: var(--paper);
     border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
-  }
-
-  /* The cover pattern is a backdrop, not a subject - it fades out behind the
-     wordmark so the type never has to fight it. */
-  .cover-art {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    -webkit-mask-image: radial-gradient(ellipse 62% 55% at 50% 46%, transparent 20%, #000 78%);
-    mask-image: radial-gradient(ellipse 62% 55% at 50% 46%, transparent 20%, #000 78%);
-  }
-
-  /* --- v0: the keyboard --- */
-  .keys {
-    position: absolute;
-    inset-inline: -6%;
-    top: 34%;
-    display: grid;
-    gap: clamp(4px, 0.7vw, 9px);
-    opacity: 0.4;
-  }
-
-  .keys-row {
-    display: flex;
-    gap: clamp(4px, 0.7vw, 9px);
-    margin-inline-start: var(--row-offset);
-  }
-
-  .key {
-    flex: 1;
-    display: grid;
-    place-items: center;
-    aspect-ratio: 1.35;
-    max-height: clamp(48px, 8vw, 104px);
-    border-radius: clamp(5px, 0.8vw, 10px);
-    background: color-mix(in srgb, var(--ink) 4%, var(--paper-deep));
-    color: color-mix(in srgb, var(--ink) 22%, transparent);
-    font-size: clamp(0.75rem, 1.6vw, 1.25rem);
-    font-weight: 500;
-  }
-
-  /* The lit keys spell out g-r-e-p on the printed cover. */
-  .key--lit {
-    background: var(--blue-pale);
-    color: color-mix(in srgb, var(--blue) 60%, transparent);
   }
 
   /* --- content --- */

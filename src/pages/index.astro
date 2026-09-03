@@ -214,7 +214,7 @@ const jsonLd = {
   }
 
   .hero-title {
-    transition: opacity 0.32s var(--ease-out);
+    transition: opacity var(--dur-fast) var(--ease-out);
   }
 
   @keyframes intro-fade {
@@ -362,7 +362,7 @@ const jsonLd = {
     font-weight: 600;
     text-decoration: none;
     color: var(--blue-deep);
-    transition: transform 0.24s var(--ease-out);
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
   .section-link:hover {
@@ -385,7 +385,7 @@ const jsonLd = {
     background: var(--paper-card);
     border: 2.5px solid color-mix(in srgb, var(--blue) 20%, transparent);
     border-radius: var(--radius-lg);
-    transition: border-color 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+    transition: border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
   }
 
   .pillar:hover {
@@ -394,7 +394,7 @@ const jsonLd = {
   }
 
   .pillar-art {
-    width: clamp(64px, 14vw, 92px);
+    width: clamp(64px, 14vw, 96px);
     height: auto;
     margin-block-end: 0.4rem;
   }
@@ -424,7 +424,7 @@ const jsonLd = {
     background: var(--paper-card);
     border: 2.5px solid color-mix(in srgb, var(--ink) 16%, transparent);
     border-radius: var(--radius);
-    transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+    transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
   }
 
   .finder-bar:focus-within {
@@ -489,7 +489,7 @@ const jsonLd = {
     align-items: center;
   }
 
-  @media (min-width: 52rem) {
+  @media (min-width: 64rem) {
     .cta-inner {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }

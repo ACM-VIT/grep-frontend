@@ -25,11 +25,11 @@ export interface SocialLink {
 export const socials: SocialLink[] = [
   { label: 'acmvit.in', href: 'https://acmvit.in', icon: 'website' },
   { label: 'email', href: 'mailto:acmvit@vit.ac.in', icon: 'mail' },
-  { label: 'facebook', href: 'https://facebook.com/acmvit', icon: 'facebook' },
+  { label: 'facebook', href: 'https://www.facebook.com/acmvitvellore/', icon: 'facebook' },
   { label: 'github', href: 'https://github.com/ACM-VIT', icon: 'github' },
   { label: 'hashnode', href: 'https://blog.acmvit.in', icon: 'hashnode' },
   { label: 'instagram', href: 'https://instagram.com/acmvit', icon: 'instagram' },
-  { label: 'linkedin', href: 'https://linkedin.com/company/acm-vit', icon: 'linkedin' },
+  { label: 'linkedin', href: 'https://www.linkedin.com/company/acmvit/', icon: 'linkedin' },
   { label: 'x.com', href: 'https://x.com/acm_vit', icon: 'x' },
-  { label: 'youtube', href: 'https://youtube.com/@acmvit', icon: 'youtube' },
+  { label: 'youtube', href: 'https://www.youtube.com/@acm_vit', icon: 'youtube' },
 ];
