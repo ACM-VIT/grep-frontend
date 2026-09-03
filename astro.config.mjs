@@ -1,6 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import vercel from '@astrojs/vercel';
+import cloudflare from '@astrojs/cloudflare';
 import sitemap from '@astrojs/sitemap';
 
 // Pages that show editions are rendered on demand, because the edition list is
@@ -9,14 +9,12 @@ import sitemap from '@astrojs/sitemap';
 // pages carry `export const prerender = false`; everything else - /admin, the
 // static assets - is still built ahead of time.
 //
-// That needs a host that can run a server. This deploys to Vercel, where the
-// on-demand routes become functions and everything prerendered is served from
-// the CDN. Swap the adapter for `@astrojs/node` (and use `npm run serve`) to
-// self-host, or `@astrojs/netlify` — nothing else in the codebase changes.
+// That needs a host that can run a server. The Cloudflare adapter turns the
+// on-demand routes into a Worker while static assets are served from the edge.
 export default defineConfig({
   site: 'https://grep.acmvit.in',
-  output: 'static',
-  adapter: vercel(),
+  output: 'server',
+  adapter: cloudflare({ imageService: 'compile' }),
   integrations: [sitemap()],
   build: { inlineStylesheets: 'auto' },
 });
